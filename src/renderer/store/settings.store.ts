@@ -215,7 +215,7 @@ const PlayerbarSliderSchema = z.object({
     type: PlayerbarSliderTypeSchema,
 });
 
-const GeneralSettingsSchema = z.object({
+export const GeneralSettingsSchema = z.object({
     accent: z
         .string()
         .refine(
@@ -224,12 +224,12 @@ const GeneralSettingsSchema = z.object({
                 message: 'Accent must be a valid rgb() color string',
             },
         ),
-    albumArtRes: z.number().nullable().optional(),
     albumBackground: z.boolean(),
     albumBackgroundBlur: z.number(),
     artistBackground: z.boolean(),
     artistBackgroundBlur: z.number(),
     artistItems: z.array(SortableItemSchema(ArtistItemSchema)),
+    artistRadioCount: z.number(),
     buttonSize: z.number(),
     disabledContextMenu: z.record(z.string(), z.boolean()),
     externalLinks: z.boolean(),
@@ -238,6 +238,13 @@ const GeneralSettingsSchema = z.object({
     genreTarget: GenreTargetSchema,
     homeFeature: z.boolean(),
     homeItems: z.array(SortableItemSchema(HomeItemSchema)),
+    imageRes: z.object({
+        fullScreenPlayer: z.number(),
+        header: z.number(),
+        itemCard: z.number(),
+        sidebar: z.number(),
+        table: z.number(),
+    }),
     language: z.string(),
     lastFM: z.boolean(),
     lastfmApiKey: z.string(),
@@ -712,12 +719,12 @@ const initialState: SettingsState = {
     },
     general: {
         accent: 'rgb(53, 116, 252)',
-        albumArtRes: undefined,
         albumBackground: false,
         albumBackgroundBlur: 3,
         artistBackground: false,
         artistBackgroundBlur: 3,
         artistItems,
+        artistRadioCount: 20,
         buttonSize: 15,
         disabledContextMenu: {},
         externalLinks: true,
@@ -726,6 +733,13 @@ const initialState: SettingsState = {
         genreTarget: GenreTarget.TRACK,
         homeFeature: true,
         homeItems,
+        imageRes: {
+            fullScreenPlayer: 0,
+            header: 300,
+            itemCard: 300,
+            sidebar: 300,
+            table: 30,
+        },
         language: 'en',
         lastFM: true,
         lastfmApiKey: '',
