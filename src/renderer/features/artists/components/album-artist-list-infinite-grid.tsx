@@ -28,43 +28,50 @@ export const AlbumArtistListInfiniteGrid = ({
     },
     saveScrollOffset = true,
     serverId,
+    size,
 }: AlbumArtistListInfiniteGridProps) => {
     const listCountQuery = artistsQueries.albumArtistListCount({
-        query: { ...query },
+        query: { ...query, limit: itemsPerPage },
         serverId: serverId,
     }) as UseSuspenseQueryOptions<number, Error, number, readonly unknown[]>;
 
     const listQueryFn = api.controller.getAlbumArtistList;
 
-    const { data, onRangeChanged } = useItemListInfiniteLoader({
-        eventKey: ItemListKey.ALBUM_ARTIST,
-        itemsPerPage,
-        itemType: LibraryItem.ALBUM_ARTIST,
-        listCountQuery,
-        listQueryFn,
-        query,
-        serverId,
-    });
+    const { dataVersion, getItem, getItemIndex, itemCount, loadedItems, onRangeChanged } =
+        useItemListInfiniteLoader({
+            eventKey: ItemListKey.ALBUM_ARTIST,
+            itemsPerPage,
+            itemType: LibraryItem.ALBUM_ARTIST,
+            listCountQuery,
+            listQueryFn,
+            query,
+            serverId,
+        });
 
     const { handleOnScrollEnd, scrollOffset } = useItemListScrollPersist({
         enabled: saveScrollOffset,
     });
 
-    const rows = useGridRows(LibraryItem.ALBUM_ARTIST, ItemListKey.ALBUM_ARTIST);
+    const rows = useGridRows(LibraryItem.ALBUM_ARTIST, ItemListKey.ALBUM_ARTIST, size);
 
     return (
         <ItemGridList
-            data={data}
+            data={loadedItems}
+            dataVersion={dataVersion}
             gap={gap}
+            getItem={getItem}
+            getItemIndex={getItemIndex}
             initialTop={{
                 to: scrollOffset ?? 0,
                 type: 'offset',
             }}
+            itemCount={itemCount}
             itemsPerRow={itemsPerRow}
             itemType={LibraryItem.ALBUM_ARTIST}
             onRangeChanged={onRangeChanged}
             onScrollEnd={handleOnScrollEnd}
             rows={rows}
+            size={size}
         />
     );
 };

@@ -620,8 +620,11 @@ ipcMain.on('update-playback', (_event, status: PlayerStatus) => {
     broadcast({ data: status, event: 'playback' });
 });
 
-ipcMain.on('update-song', (_event, song: QueueSong | undefined) => {
+ipcMain.on('update-song', (_event, song: QueueSong | undefined, imageUrl?: null | string) => {
     const songChanged = song?.id !== currentState.song?.id;
+    if (song) {
+        song.imageUrl = imageUrl || null;
+    }
     currentState.song = song;
 
     if (songChanged) {
@@ -657,6 +660,9 @@ if (mprisPlayer) {
         }
         currentState.volume = volume;
         broadcast({ data: volume, event: 'volume' });
+        getMainWindow()?.webContents.send('request-volume', {
+            volume,
+        });
     });
 }
 

@@ -1,22 +1,25 @@
 import { SetActivity, StatusDisplayType } from '@xhayper/discord-rpc';
 import isElectron from 'is-electron';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { controller } from '/@/renderer/api/controller';
+import { api } from '/@/renderer/api';
+import { useItemImageUrl } from '/@/renderer/components/item-image/item-image';
 import {
     DiscordDisplayType,
     DiscordLinkType,
     useAppStore,
     useDiscordSettings,
-    useGeneralSettings,
+    useLastfmApiKey,
+    usePlayerSong,
     usePlayerStore,
+    useSettingsStore,
     useTimestampStoreBase,
 } from '/@/renderer/store';
 import { sentenceCase } from '/@/renderer/utils';
 import { LogCategory, logFn } from '/@/renderer/utils/logger';
 import { logMsg } from '/@/renderer/utils/logger-message';
 import { useDebouncedCallback } from '/@/shared/hooks/use-debounced-callback';
-import { QueueSong, ServerType } from '/@/shared/types/domain-types';
+import { LibraryItem, QueueSong, ServerType } from '/@/shared/types/domain-types';
 import { PlayerStatus } from '/@/shared/types/types';
 
 const discordRpc = isElectron() ? window.api.discordRpc : null;
@@ -29,13 +32,28 @@ const truncate = (field: string) =>
 
 export const useDiscordRpc = () => {
     const discordSettings = useDiscordSettings();
-    const generalSettings = useGeneralSettings();
+    const lastfmApiKey = useLastfmApiKey();
     const privateMode = useAppStore((state) => state.privateMode);
     const [lastUniqueId, setlastUniqueId] = useState('');
 
+    const currentSong = usePlayerSong();
+    const imageUrl = useItemImageUrl({
+        id: currentSong?.imageId || undefined,
+        imageUrl: currentSong?.imageUrl,
+        itemType: LibraryItem.SONG,
+        type: 'table',
+        useRemoteUrl: true,
+    });
+
+    const imageUrlRef = useRef<null | string | undefined>(imageUrl);
     const previousEnabledRef = useRef<boolean>(discordSettings.enabled);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const previousActivityStateRef = useRef<ActivityState | null>(null);
+
+    // Update imageUrl ref when it changes
+    useEffect(() => {
+        imageUrlRef.current = imageUrl;
+    }, [imageUrl]);
 
     const setActivity = useCallback(
         async (current: ActivityState, previous: ActivityState) => {
@@ -178,32 +196,37 @@ export const useDiscordRpc = () => {
                 }
 
                 if (discordSettings.showServerImage && song) {
-                    if (song._serverType === ServerType.JELLYFIN && song.imageUrl) {
-                        activity.largeImageKey = song.imageUrl;
-                    } else if (song._serverType === ServerType.NAVIDROME) {
-                        try {
-                            const info = await controller.getAlbumInfo({
-                                apiClientProps: { serverId: song._serverId },
-                                query: { id: song.albumId },
-                            });
+                    if (song._uniqueId === currentSong?._uniqueId && imageUrlRef.current) {
+                        if (song._serverType === ServerType.JELLYFIN) {
+                            activity.largeImageKey = imageUrlRef.current;
+                        } else if (
+                            song._serverType === ServerType.NAVIDROME ||
+                            song._serverType === ServerType.SUBSONIC
+                        ) {
+                            try {
+                                const info = await api.controller.getAlbumInfo({
+                                    apiClientProps: { serverId: song._serverId },
+                                    query: { id: song.albumId },
+                                });
 
-                            if (info.imageUrl) {
-                                activity.largeImageKey = info.imageUrl;
+                                if (info.imageUrl) {
+                                    activity.largeImageKey = info.imageUrl;
+                                }
+                            } catch {
+                                /* empty */
                             }
-                        } catch {
-                            /* empty */
                         }
                     }
                 }
 
                 if (
                     activity.largeImageKey === undefined &&
-                    generalSettings.lastfmApiKey &&
+                    lastfmApiKey &&
                     song?.album &&
                     song?.albumArtists.length
                 ) {
                     const albumInfo = await fetch(
-                        `https://ws.audioscrobbler.com/2.0/?method=album.getinfo&api_key=${generalSettings.lastfmApiKey}&artist=${encodeURIComponent(song.albumArtists[0].name)}&album=${encodeURIComponent(song.album)}&format=json`,
+                        `https://ws.audioscrobbler.com/2.0/?method=album.getinfo&api_key=${lastfmApiKey}&artist=${encodeURIComponent(song.albumArtists[0].name)}&album=${encodeURIComponent(song.album)}&format=json`,
                     );
 
                     const albumInfoJson = await albumInfo.json();
@@ -270,11 +293,12 @@ export const useDiscordRpc = () => {
             discordSettings.showAsListening,
             discordSettings.showServerImage,
             discordSettings.showPaused,
-            generalSettings.lastfmApiKey,
+            lastfmApiKey,
             discordSettings.clientId,
             discordSettings.displayType,
             discordSettings.linkType,
             lastUniqueId,
+            currentSong?._uniqueId,
         ],
     );
 
@@ -386,4 +410,22 @@ export const useDiscordRpc = () => {
         privateMode,
         setActivity,
     ]);
+};
+
+const DiscordRpcHookInner = () => {
+    useDiscordRpc();
+    return null;
+};
+
+export const DiscordRpcHook = () => {
+    const isElectronEnv = isElectron();
+    const isDiscordRpcEnabled = useSettingsStore((state) => state.discord.enabled);
+    const isPrivateMode = useAppStore((state) => state.privateMode);
+    const discordRpc = isElectronEnv ? window.api.discordRpc : null;
+
+    if (!isElectronEnv || !discordRpc || !isDiscordRpcEnabled || isPrivateMode) {
+        return null;
+    }
+
+    return React.createElement(DiscordRpcHookInner);
 };

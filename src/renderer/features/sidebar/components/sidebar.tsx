@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 import styles from './sidebar.module.css';
 
+import { useItemImageUrl } from '/@/renderer/components/item-image/item-image';
 import { ContextMenuController } from '/@/renderer/features/context-menu/context-menu-controller';
 import { useRadioStore } from '/@/renderer/features/radio/hooks/use-radio-player';
 import { ActionBar } from '/@/renderer/features/sidebar/components/action-bar';
@@ -24,7 +25,8 @@ import {
 } from '/@/renderer/store';
 import {
     SidebarItemType,
-    useGeneralSettings,
+    useSidebarItems,
+    useSidebarPlaylistList,
     useWindowSettings,
 } from '/@/renderer/store/settings.store';
 import { Accordion } from '/@/shared/components/accordion/accordion';
@@ -40,7 +42,7 @@ import { Platform } from '/@/shared/types/types';
 export const Sidebar = () => {
     const { t } = useTranslation();
 
-    const { sidebarPlaylistList } = useGeneralSettings();
+    const sidebarPlaylistList = useSidebarPlaylistList();
 
     const translatedSidebarItemMap = useMemo(
         () => ({
@@ -61,7 +63,7 @@ export const Sidebar = () => {
         [t],
     );
 
-    const { sidebarItems } = useGeneralSettings();
+    const sidebarItems = useSidebarItems();
     const { windowBarStyle } = useWindowSettings();
     const sidebarImageEnabled = useAppStore((state) => state.sidebar.image);
     const isRadioPlaying = useRadioStore((state) => state.isPlaying);
@@ -151,10 +153,12 @@ const SidebarImage = () => {
     const { setSideBar } = useAppStoreActions();
     const currentSong = usePlayerSong();
 
-    const upsizedImageUrl = currentSong?.imageUrl
-        ?.replace(/size=\d+/, 'size=450')
-        .replace(/width=\d+/, 'width=450')
-        .replace(/height=\d+/, 'height=450');
+    const imageUrl = useItemImageUrl({
+        id: currentSong?.imageId || undefined,
+        itemType: LibraryItem.SONG,
+        serverId: currentSong?._serverId,
+        type: 'sidebar',
+    });
 
     const isSongDefined = Boolean(currentSong?.id);
 
@@ -202,10 +206,10 @@ const SidebarImage = () => {
                     postProcess: 'sentenceCase',
                 })}
             >
-                {upsizedImageUrl ? (
-                    <img className={styles.sidebarImage} loading="eager" src={upsizedImageUrl} />
+                {imageUrl ? (
+                    <img className={styles.sidebarImage} loading="eager" src={imageUrl} />
                 ) : (
-                    <ImageUnloader />
+                    <ImageUnloader icon="emptySongImage" />
                 )}
             </Tooltip>
             <ActionIcon

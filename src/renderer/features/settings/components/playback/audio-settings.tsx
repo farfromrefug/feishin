@@ -1,12 +1,13 @@
+import { t } from 'i18next';
 import isElectron from 'is-electron';
-import { useEffect, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
     SettingOption,
     SettingsSection,
 } from '/@/renderer/features/settings/components/settings-section';
-import { usePlayerStatus } from '/@/renderer/store';
+import { usePlaybackType, usePlayerStatus } from '/@/renderer/store';
 import { usePlaybackSettings, useSettingsStoreActions } from '/@/renderer/store/settings.store';
 import { Select } from '/@/shared/components/select/select';
 import { Switch } from '/@/shared/components/switch/switch';
@@ -14,37 +15,85 @@ import { toast } from '/@/shared/components/toast/toast';
 import { PlayerStatus, PlayerType } from '/@/shared/types/types';
 
 const ipc = isElectron() ? window.api.ipc : null;
+const mpvPlayer = isElectron() ? window.api.mpvPlayer : null;
 
-const getAudioDevice = async () => {
+const getAudioDevices = async () => {
     const devices = await navigator.mediaDevices.enumerateDevices();
     return (devices || []).filter((dev: MediaDeviceInfo) => dev.kind === 'audiooutput');
 };
 
-export const AudioSettings = () => {
+const getMpvAudioDevices = async () => {
+    if (!mpvPlayer) {
+        console.log('mpvPlayer not found');
+        return [];
+    }
+
+    try {
+        return await mpvPlayer.getAudioDevices();
+    } catch (error) {
+        console.error('Failed to get MPV audio devices:', error);
+        return [];
+    }
+};
+
+export const useAudioDevices = () => {
+    const playbackType = usePlaybackType();
+    const [audioDevices, setAudioDevices] = useState<{ label: string; value: string }[]>([]);
+
+    useEffect(() => {
+        const fetchAudioDevices = async () => {
+            if (!isElectron()) {
+                return;
+            }
+
+            if (playbackType === PlayerType.WEB) {
+                getAudioDevices()
+                    .then((dev) => {
+                        const uniqueDevices = dev.filter(
+                            (d, index, self) =>
+                                index === self.findIndex((t) => t.deviceId === d.deviceId),
+                        );
+                        setAudioDevices(
+                            uniqueDevices.map((d) => ({ label: d.label, value: d.deviceId })),
+                        );
+                    })
+                    .catch(() =>
+                        toast.error({
+                            message: t('error.audioDeviceFetchError', {
+                                postProcess: 'sentenceCase',
+                            }),
+                        }),
+                    );
+            } else if (playbackType === PlayerType.LOCAL && mpvPlayer) {
+                try {
+                    const devices = await getMpvAudioDevices();
+                    const uniqueDevices = devices.filter(
+                        (d, index, self) => index === self.findIndex((t) => t.value === d.value),
+                    );
+                    setAudioDevices(uniqueDevices);
+                } catch {
+                    toast.error({
+                        message: t('error.audioDeviceFetchError', {
+                            postProcess: 'sentenceCase',
+                        }),
+                    });
+                }
+            }
+        };
+
+        fetchAudioDevices();
+    }, [playbackType]);
+
+    return audioDevices;
+};
+
+export const AudioSettings = memo(() => {
     const { t } = useTranslation();
     const settings = usePlaybackSettings();
     const { setSettings } = useSettingsStoreActions();
     const status = usePlayerStatus();
 
-    const [audioDevices, setAudioDevices] = useState<{ label: string; value: string }[]>([]);
-
-    useEffect(() => {
-        const getAudioDevices = () => {
-            getAudioDevice()
-                .then((dev) =>
-                    setAudioDevices(dev.map((d) => ({ label: d.label, value: d.deviceId }))),
-                )
-                .catch(() =>
-                    toast.error({
-                        message: t('error.audioDeviceFetchError', { postProcess: 'sentenceCase' }),
-                    }),
-                );
-        };
-
-        if (settings.type === PlayerType.WEB) {
-            getAudioDevices();
-        }
-    }, [settings.type, t]);
+    const audioDevices = useAudioDevices();
 
     const audioOptions: SettingOption[] = [
         {
@@ -61,7 +110,7 @@ export const AudioSettings = () => {
                     defaultValue={settings.type}
                     disabled={status === PlayerStatus.PLAYING}
                     onChange={(e) => {
-                        setSettings({ playback: { ...settings, type: e as PlayerType } });
+                        setSettings({ playback: { type: e as PlayerType } });
                         ipc?.send('settings-set', { property: 'playbackType', value: e });
                     }}
                 />
@@ -83,15 +132,14 @@ export const AudioSettings = () => {
                     clearable
                     data={audioDevices}
                     defaultValue={settings.audioDeviceId}
-                    disabled={settings.type !== PlayerType.WEB}
-                    onChange={(e) => setSettings({ playback: { ...settings, audioDeviceId: e } })}
+                    disabled={!isElectron()}
+                    onChange={(e) => setSettings({ playback: { audioDeviceId: e } })}
                 />
             ),
             description: t('setting.audioDevice', {
                 context: 'description',
                 postProcess: 'sentenceCase',
             }),
-            isHidden: !isElectron() || settings.type !== PlayerType.WEB,
             title: t('setting.audioDevice', { postProcess: 'sentenceCase' }),
         },
         {
@@ -100,7 +148,7 @@ export const AudioSettings = () => {
                     defaultChecked={settings.webAudio}
                     onChange={(e) => {
                         setSettings({
-                            playback: { ...settings, webAudio: e.currentTarget.checked },
+                            playback: { webAudio: e.currentTarget.checked },
                         });
                     }}
                 />
@@ -121,7 +169,7 @@ export const AudioSettings = () => {
                     defaultChecked={settings.preservePitch}
                     onChange={(e) => {
                         setSettings({
-                            playback: { ...settings, preservePitch: e.currentTarget.checked },
+                            playback: { preservePitch: e.currentTarget.checked },
                         });
                     }}
                 />
@@ -142,7 +190,6 @@ export const AudioSettings = () => {
                     onChange={(e) => {
                         setSettings({
                             playback: {
-                                ...settings,
                                 audioFadeOnStatusChange: e.currentTarget.checked,
                             },
                         });
@@ -165,4 +212,4 @@ export const AudioSettings = () => {
             title={t('page.setting.audio', { postProcess: 'sentenceCase' })}
         />
     );
-};
+});

@@ -6,7 +6,6 @@ import { ItemListHandle } from '/@/renderer/components/item-list/types';
 import { useListContext } from '/@/renderer/context/list-context';
 import { eventEmitter } from '/@/renderer/events/event-emitter';
 import { playlistsQueries } from '/@/renderer/features/playlists/api/playlists-api';
-import { PlaylistDetailSongListEditTable } from '/@/renderer/features/playlists/components/playlist-detail-song-list-table';
 import { useCurrentServer, useListSettings } from '/@/renderer/store';
 import { Spinner } from '/@/shared/components/spinner/spinner';
 import { PlaylistSongListQuery, PlaylistSongListResponse } from '/@/shared/types/domain-types';
@@ -16,6 +15,22 @@ const PlaylistDetailSongListTable = lazy(() =>
     import('/@/renderer/features/playlists/components/playlist-detail-song-list-table').then(
         (module) => ({
             default: module.PlaylistDetailSongListTable,
+        }),
+    ),
+);
+
+const PlaylistDetailSongListEditTable = lazy(() =>
+    import('/@/renderer/features/playlists/components/playlist-detail-song-list-table').then(
+        (module) => ({
+            default: module.PlaylistDetailSongListEditTable,
+        }),
+    ),
+);
+
+const PlaylistDetailSongListGrid = lazy(() =>
+    import('/@/renderer/features/playlists/components/playlist-detail-song-list-grid').then(
+        (module) => ({
+            default: module.PlaylistDetailSongListGrid,
         }),
     ),
 );
@@ -82,6 +97,9 @@ export const PlaylistDetailSongListView = ({ data }: { data: PlaylistSongListRes
     const { display, table } = useListSettings(ItemListKey.PLAYLIST_SONG);
 
     switch (display) {
+        case ListDisplayType.GRID: {
+            return <PlaylistDetailSongListGrid data={data} serverId={server.id} />;
+        }
         case ListDisplayType.TABLE: {
             return (
                 <PlaylistDetailSongListTable
@@ -210,6 +228,7 @@ export const PlaylistDetailSongListEdit = ({ data }: { data: PlaylistSongListRes
     }, [localData, setListData]);
 
     switch (display) {
+        case ListDisplayType.GRID:
         case ListDisplayType.TABLE: {
             return (
                 <PlaylistDetailSongListEditTable

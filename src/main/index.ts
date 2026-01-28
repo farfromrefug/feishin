@@ -30,6 +30,7 @@ import MenuBuilder from './menu';
 import {
     autoUpdaterLogInterface,
     createLog,
+    disableAutoUpdates,
     hotkeyToElectronAccelerator,
     isLinux,
     isMacOS,
@@ -125,7 +126,9 @@ const installExtensions = async () => {
                     type: 'info',
                 });
             })
-            .catch(console.error);
+            .catch(() => {
+                // Ignore
+            });
     });
 };
 
@@ -184,13 +187,21 @@ const createWinThumbarButtons = () => {
 };
 
 const createTray = () => {
+    let trayIcon: Electron.NativeImage | string;
+
     if (isMacOS()) {
-        return;
+        const iconPath = getAssetPath('icons/IconTemplate.png');
+        const icon = nativeImage.createFromPath(iconPath);
+        icon.setTemplateImage(true);
+        trayIcon = icon;
+    } else if (isLinux()) {
+        trayIcon = getAssetPath('icons/icon.png');
+    } else {
+        trayIcon = getAssetPath('icons/icon.ico');
     }
 
-    tray = isLinux()
-        ? new Tray(getAssetPath('icons/icon.png'))
-        : new Tray(getAssetPath('icons/icon.ico'));
+    tray = new Tray(trayIcon);
+
     const contextMenu = Menu.buildFromTemplate([
         {
             click: () => {
@@ -274,8 +285,8 @@ async function createWindow(first = true): Promise<void> {
         autoHideMenuBar: true,
         frame: false,
         height: 900,
-        icon: getAssetPath('icons/icon.png'),
-        minHeight: 640,
+        icon: isWindows() ? getAssetPath('icons/icon.ico') : getAssetPath('icons/icon.png'),
+        minHeight: 120,
         minWidth: 480,
         show: false,
         webPreferences: {
@@ -456,7 +467,7 @@ async function createWindow(first = true): Promise<void> {
         return { action: 'deny' };
     });
 
-    if (store.get('disable_auto_updates') !== true) {
+    if (!disableAutoUpdates() && store.get('disable_auto_updates') !== true) {
         new AppUpdater();
     }
 
@@ -495,6 +506,9 @@ if (shouldDisableMediaFeatures) {
 
 // https://github.com/electron/electron/issues/46538#issuecomment-2808806722
 app.commandLine.appendSwitch('gtk-version', '3');
+
+// Enable garbage collection API
+app.commandLine.appendSwitch('js-flags', '--expose-gc');
 
 // Must duplicate with the one in renderer process settings.store.ts
 enum BindingActions {

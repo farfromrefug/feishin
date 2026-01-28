@@ -27,43 +27,50 @@ export const ArtistListInfiniteGrid = ({
     },
     saveScrollOffset = true,
     serverId,
+    size,
 }: ArtistListInfiniteGridProps) => {
     const listCountQuery = artistsQueries.artistListCount({
-        query: { ...query },
+        query: { ...query, limit: itemsPerPage },
         serverId: serverId,
     }) as UseSuspenseQueryOptions<number, Error, number, readonly unknown[]>;
 
     const listQueryFn = api.controller.getArtistList;
 
-    const { data, onRangeChanged } = useItemListInfiniteLoader({
-        eventKey: ItemListKey.ARTIST,
-        itemsPerPage,
-        itemType: LibraryItem.ARTIST,
-        listCountQuery,
-        listQueryFn,
-        query,
-        serverId,
-    });
+    const { dataVersion, getItem, getItemIndex, itemCount, loadedItems, onRangeChanged } =
+        useItemListInfiniteLoader({
+            eventKey: ItemListKey.ARTIST,
+            itemsPerPage,
+            itemType: LibraryItem.ARTIST,
+            listCountQuery,
+            listQueryFn,
+            query,
+            serverId,
+        });
 
     const { handleOnScrollEnd, scrollOffset } = useItemListScrollPersist({
         enabled: saveScrollOffset,
     });
 
-    const rows = useGridRows(LibraryItem.ARTIST, ItemListKey.ARTIST);
+    const rows = useGridRows(LibraryItem.ARTIST, ItemListKey.ARTIST, size);
 
     return (
         <ItemGridList
-            data={data}
+            data={loadedItems}
+            dataVersion={dataVersion}
             gap={gap}
+            getItem={getItem}
+            getItemIndex={getItemIndex}
             initialTop={{
                 to: scrollOffset ?? 0,
                 type: 'offset',
             }}
+            itemCount={itemCount}
             itemsPerRow={itemsPerRow}
             itemType={LibraryItem.ARTIST}
             onRangeChanged={onRangeChanged}
             onScrollEnd={handleOnScrollEnd}
             rows={rows}
+            size={size}
         />
     );
 };

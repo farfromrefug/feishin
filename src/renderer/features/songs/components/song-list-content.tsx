@@ -45,7 +45,7 @@ const SongListFilters = () => {
     return (
         <ListWithSidebarContainer.SidebarPortal>
             <Stack h="100%">
-                <ListFiltersTitle />
+                <ListFiltersTitle itemType={LibraryItem.SONG} />
                 <ScrollArea>
                     <ListFilters itemType={LibraryItem.SONG} />
                 </ScrollArea>
@@ -112,6 +112,7 @@ export const SongListView = ({
                             itemsPerRow={grid.itemsPerRowEnabled ? grid.itemsPerRow : undefined}
                             query={mergedQuery}
                             serverId={server.id}
+                            size={grid.size}
                         />
                     );
                 case ListPaginationType.PAGINATED:
@@ -122,6 +123,7 @@ export const SongListView = ({
                             itemsPerRow={grid.itemsPerRowEnabled ? grid.itemsPerRow : undefined}
                             query={mergedQuery}
                             serverId={server.id}
+                            size={grid.size}
                         />
                     );
                 default:

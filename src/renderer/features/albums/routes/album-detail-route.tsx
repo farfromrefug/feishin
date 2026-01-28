@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useRef } from 'react';
 import { useLocation, useParams } from 'react-router';
 
+import { useItemImageUrl } from '/@/renderer/components/item-image/item-image';
 import { NativeScrollArea } from '/@/renderer/components/native-scroll-area/native-scroll-area';
 import { albumQueries } from '/@/renderer/features/albums/api/album-api';
 import { AlbumDetailContent } from '/@/renderer/features/albums/components/album-detail-content';
@@ -14,14 +15,14 @@ import {
 import { LibraryContainer } from '/@/renderer/features/shared/components/library-container';
 import { LibraryHeaderBar } from '/@/renderer/features/shared/components/library-header-bar';
 import { PageErrorBoundary } from '/@/renderer/features/shared/components/page-error-boundary';
-import { useFastAverageColor, useWaitForColorCalculation } from '/@/renderer/hooks';
-import { useCurrentServer, useGeneralSettings } from '/@/renderer/store';
+import { useFastAverageColor } from '/@/renderer/hooks';
+import { useAlbumBackground, useCurrentServer } from '/@/renderer/store';
 import { LibraryItem } from '/@/shared/types/domain-types';
 
 const AlbumDetailRoute = () => {
     const scrollAreaRef = useRef<HTMLDivElement>(null);
     const headerRef = useRef<HTMLDivElement>(null);
-    const { albumBackground, albumBackgroundBlur } = useGeneralSettings();
+    const { albumBackground, albumBackgroundBlur } = useAlbumBackground();
 
     const { albumId } = useParams() as { albumId: string };
     const server = useCurrentServer();
@@ -30,13 +31,19 @@ const AlbumDetailRoute = () => {
 
     const detailQuery = useQuery({
         ...albumQueries.detail({ query: { id: albumId }, serverId: server?.id }),
-        initialData: location.state?.item,
-        staleTime: 0,
+        placeholderData: location.state?.item,
     });
+
+    const imageUrl =
+        useItemImageUrl({
+            id: detailQuery?.data?.imageId || undefined,
+            itemType: LibraryItem.ALBUM,
+            type: 'itemCard',
+        }) || '';
 
     const { background: backgroundColor, isLoading: isColorLoading } = useFastAverageColor({
         id: albumId,
-        src: detailQuery.data?.imageUrl,
+        src: imageUrl,
         srcLoaded: !detailQuery.isLoading,
     });
 
@@ -44,14 +51,7 @@ const AlbumDetailRoute = () => {
 
     const showBlurredImage = albumBackground;
 
-    const { isReady } = useWaitForColorCalculation({
-        hasImage: !!detailQuery.data?.imageUrl,
-        isLoading: isColorLoading,
-        routeId: albumId,
-        showBlurredImage,
-    });
-
-    if (!isReady) {
+    if (isColorLoading) {
         return null;
     }
 
@@ -81,7 +81,7 @@ const AlbumDetailRoute = () => {
                     <LibraryBackgroundImage
                         blur={albumBackgroundBlur}
                         headerRef={headerRef}
-                        imageUrl={detailQuery.data?.imageUrl}
+                        imageUrl={imageUrl}
                     />
                 ) : (
                     <LibraryBackgroundOverlay backgroundColor={background} headerRef={headerRef} />

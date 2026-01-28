@@ -6,8 +6,11 @@ import { LibraryItem } from '/@/shared/types/domain-types';
 import { TableColumn } from '/@/shared/types/types';
 import { ItemListKey } from '/@/shared/types/types';
 
-const getDefaultRowsForItemType = (itemType: LibraryItem): DataRow[] => {
-    const allRows = getDataRows();
+const getDefaultRowsForItemType = (
+    itemType: LibraryItem,
+    type?: 'compact' | 'default' | 'poster',
+): DataRow[] => {
+    const allRows = getDataRows(type);
     const rowMap = new Map(allRows.map((row) => [row.id, row]));
 
     switch (itemType) {
@@ -36,9 +39,7 @@ const getDefaultRowsForItemType = (itemType: LibraryItem): DataRow[] => {
     }
 };
 
-// Map TableColumn enum values to row IDs used in getDataRows
 const getRowIdFromTableColumn = (tableColumn: TableColumn): null | string => {
-    // Map TableColumn enum values to the row IDs used in getDataRows
     const columnToRowIdMap: Record<TableColumn, null | string> = {
         [TableColumn.ACTIONS]: null,
         [TableColumn.ALBUM]: 'album',
@@ -71,6 +72,7 @@ const getRowIdFromTableColumn = (tableColumn: TableColumn): null | string => {
         [TableColumn.SKIP]: null,
         [TableColumn.SONG_COUNT]: 'songCount',
         [TableColumn.TITLE]: 'name',
+        [TableColumn.TITLE_ARTIST]: null,
         [TableColumn.TITLE_COMBINED]: null,
         [TableColumn.TRACK_NUMBER]: null,
         [TableColumn.USER_FAVORITE]: 'userFavorite',
@@ -80,16 +82,22 @@ const getRowIdFromTableColumn = (tableColumn: TableColumn): null | string => {
     return columnToRowIdMap[tableColumn] || null;
 };
 
-export const useGridRows = (itemType: LibraryItem, listKey?: ItemListKey) => {
+export const useGridRows = (
+    itemType: LibraryItem,
+    listKey?: ItemListKey,
+    size?: 'compact' | 'default' | 'large',
+) => {
     const gridRowsConfig = useSettingsStore((state) =>
         listKey ? state.lists[listKey]?.grid?.rows : undefined,
     );
 
+    const type: 'compact' | 'default' | 'poster' = size === 'compact' ? 'compact' : 'poster';
+
     return useMemo(() => {
-        const allRows = getDataRows();
+        const allRows = getDataRows(type);
 
         if (!listKey || !gridRowsConfig || gridRowsConfig.length === 0) {
-            const defaultRows = getDefaultRowsForItemType(itemType);
+            const defaultRows = getDefaultRowsForItemType(itemType, type);
             return defaultRows.length > 0 ? defaultRows : allRows;
         }
 
@@ -110,5 +118,5 @@ export const useGridRows = (itemType: LibraryItem, listKey?: ItemListKey) => {
             .filter((row): row is NonNullable<typeof row> => row !== null && row !== undefined);
 
         return configuredRows.length > 0 ? configuredRows : allRows;
-    }, [itemType, listKey, gridRowsConfig]);
+    }, [itemType, listKey, gridRowsConfig, type]);
 };

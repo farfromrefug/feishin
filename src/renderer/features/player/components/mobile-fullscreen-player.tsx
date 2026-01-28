@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 
 import styles from './mobile-fullscreen-player.module.css';
 
+import { useItemImageUrl } from '/@/renderer/components/item-image/item-image';
 import { ContextMenuController } from '/@/renderer/features/context-menu/context-menu-controller';
 import { Lyrics } from '/@/renderer/features/lyrics/lyrics';
 import { PlayQueue } from '/@/renderer/features/now-playing/components/play-queue';
@@ -23,9 +24,8 @@ import { MobileFullscreenPlayerControls } from '/@/renderer/features/player/comp
 import { MobileFullscreenPlayerHeader } from '/@/renderer/features/player/components/mobile-fullscreen-player-header';
 import { MobileFullscreenPlayerMetadata } from '/@/renderer/features/player/components/mobile-fullscreen-player-metadata';
 import { MobileFullscreenPlayerProgress } from '/@/renderer/features/player/components/mobile-fullscreen-player-progress';
-import { useCreateFavorite } from '/@/renderer/features/shared/mutations/create-favorite-mutation';
-import { useDeleteFavorite } from '/@/renderer/features/shared/mutations/delete-favorite-mutation';
-import { useSetRating } from '/@/renderer/features/shared/mutations/set-rating-mutation';
+import { useSetFavorite } from '/@/renderer/features/shared/hooks/use-set-favorite';
+import { useSetRating } from '/@/renderer/features/shared/hooks/use-set-rating';
 import { useFastAverageColor } from '/@/renderer/hooks';
 import {
     useCurrentServer,
@@ -74,14 +74,22 @@ const BackgroundImage = memo(({ dynamicBackground, dynamicIsImage }: BackgroundI
     const currentSong = usePlayerSong();
     const { nextSong } = usePlayerData();
 
+    const currentImageUrl = useItemImageUrl({
+        id: currentSong?.imageId || undefined,
+        itemType: LibraryItem.SONG,
+        type: 'itemCard',
+    });
+
+    const nextImageUrl = useItemImageUrl({
+        id: nextSong?.imageId || undefined,
+        itemType: LibraryItem.SONG,
+        type: 'itemCard',
+    });
+
     const [imageState, setImageState] = useState({
-        bottomImage: nextSong?.imageUrl
-            ? nextSong.imageUrl.replace(/size=\d+/g, 'size=500')
-            : undefined,
+        bottomImage: nextImageUrl,
         current: 0,
-        topImage: currentSong?.imageUrl
-            ? currentSong.imageUrl.replace(/size=\d+/g, 'size=500')
-            : undefined,
+        topImage: currentImageUrl,
     });
 
     const previousSongRef = useRef<string | undefined>(currentSong?._uniqueId);
@@ -98,12 +106,6 @@ const BackgroundImage = memo(({ dynamicBackground, dynamicIsImage }: BackgroundI
         }
 
         const isTop = imageStateRef.current.current === 0;
-        const currentImageUrl = currentSong?.imageUrl
-            ? currentSong.imageUrl.replace(/size=\d+/g, 'size=500')
-            : undefined;
-        const nextImageUrl = nextSong?.imageUrl
-            ? nextSong.imageUrl.replace(/size=\d+/g, 'size=500')
-            : undefined;
 
         setImageState({
             bottomImage: isTop ? currentImageUrl : nextImageUrl,
@@ -112,7 +114,7 @@ const BackgroundImage = memo(({ dynamicBackground, dynamicIsImage }: BackgroundI
         });
 
         previousSongRef.current = currentSong?._uniqueId;
-    }, [currentSong?._uniqueId, currentSong?.imageUrl, nextSong?._uniqueId, nextSong?.imageUrl]);
+    }, [currentSong?._uniqueId, currentImageUrl, nextSong?._uniqueId, nextImageUrl]);
 
     if (!dynamicBackground || !dynamicIsImage) {
         return null;
@@ -299,9 +301,15 @@ interface MobilePlayerContainerProps {
 const MobilePlayerContainer = memo(
     ({ children, dynamicBackground, dynamicIsImage }: MobilePlayerContainerProps) => {
         const currentSong = usePlayerSong();
+        const imageUrl = useItemImageUrl({
+            id: currentSong?.imageId || undefined,
+            imageUrl: currentSong?.imageUrl,
+            itemType: LibraryItem.SONG,
+            type: 'itemCard',
+        });
         const { background } = useFastAverageColor({
             algorithm: 'dominant',
-            src: currentSong?.imageUrl,
+            src: imageUrl,
             srcLoaded: true,
         });
 
@@ -368,9 +376,8 @@ export const MobileFullscreenPlayer = () => {
     const currentSong = usePlayerSong();
     const { currentSong: currentSongData } = usePlayerData();
     const server = useCurrentServer();
-    const addToFavoritesMutation = useCreateFavorite({});
-    const removeFromFavoritesMutation = useDeleteFavorite({});
-    const updateRatingMutation = useSetRating({});
+    const setFavorite = useSetFavorite();
+    const setRating = useSetRating();
 
     const [isPageHovered, setIsPageHovered] = useState(false);
 
@@ -405,25 +412,9 @@ export const MobileFullscreenPlayer = () => {
             const song = currentSongData;
             if (!song?.id) return;
 
-            if (song.userFavorite) {
-                removeFromFavoritesMutation.mutate({
-                    apiClientProps: { serverId: song?._serverId || '' },
-                    query: {
-                        id: [song.id],
-                        type: LibraryItem.SONG,
-                    },
-                });
-            } else {
-                addToFavoritesMutation.mutate({
-                    apiClientProps: { serverId: song?._serverId || '' },
-                    query: {
-                        id: [song.id],
-                        type: LibraryItem.SONG,
-                    },
-                });
-            }
+            setFavorite(song._serverId, [song.id], LibraryItem.SONG, !song.userFavorite);
         },
-        [currentSongData, addToFavoritesMutation, removeFromFavoritesMutation],
+        [currentSongData, setFavorite],
     );
 
     const handleToggleLyrics = useCallback(() => {
@@ -434,16 +425,9 @@ export const MobileFullscreenPlayer = () => {
         (rating: number) => {
             if (!currentSong?.id) return;
 
-            updateRatingMutation.mutate({
-                apiClientProps: { serverId: currentSong?._serverId || '' },
-                query: {
-                    id: [currentSong.id],
-                    rating,
-                    type: LibraryItem.SONG,
-                },
-            });
+            setRating(currentSong._serverId, [currentSong.id], LibraryItem.SONG, rating);
         },
-        [currentSong, updateRatingMutation],
+        [currentSong, setRating],
     );
 
     const isPlayerState = activeTab !== 'queue' && activeTab !== 'lyrics';

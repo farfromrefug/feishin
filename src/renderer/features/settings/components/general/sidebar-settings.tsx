@@ -1,4 +1,4 @@
-import { ChangeEvent } from 'react';
+import { ChangeEvent, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { SidebarReorder } from '/@/renderer/features/settings/components/general/sidebar-reorder';
@@ -9,7 +9,7 @@ import {
 import { useGeneralSettings, useSettingsStoreActions } from '/@/renderer/store';
 import { Switch } from '/@/shared/components/switch/switch';
 
-export const SidebarSettings = () => {
+export const SidebarSettings = memo(() => {
     const { t } = useTranslation();
     const settings = useGeneralSettings();
     const { setSettings } = useSettingsStoreActions();
@@ -17,7 +17,6 @@ export const SidebarSettings = () => {
     const handleSetSidebarPlaylistList = (e: ChangeEvent<HTMLInputElement>) => {
         setSettings({
             general: {
-                ...settings,
                 sidebarPlaylistList: e.target.checked,
             },
         });
@@ -26,7 +25,6 @@ export const SidebarSettings = () => {
     const handleSetSidebarCollapsedNavigation = (e: ChangeEvent<HTMLInputElement>) => {
         setSettings({
             general: {
-                ...settings,
                 sidebarCollapsedNavigation: e.target.checked,
             },
         });
@@ -67,7 +65,6 @@ export const SidebarSettings = () => {
                     onChange={(e) => {
                         setSettings({
                             general: {
-                                ...settings,
                                 showLyricsInSidebar: e.currentTarget.checked,
                             },
                         });
@@ -88,7 +85,6 @@ export const SidebarSettings = () => {
                     onChange={(e) => {
                         setSettings({
                             general: {
-                                ...settings,
                                 showVisualizerInSidebar: e.currentTarget.checked,
                             },
                         });
@@ -101,6 +97,26 @@ export const SidebarSettings = () => {
             }),
             title: t('setting.showVisualizerInSidebar', { postProcess: 'sentenceCase' }),
         },
+        {
+            control: (
+                <Switch
+                    aria-label="Combine lyrics and visualizer"
+                    defaultChecked={settings.combinedLyricsAndVisualizer}
+                    onChange={(e) => {
+                        setSettings({
+                            general: {
+                                combinedLyricsAndVisualizer: e.currentTarget.checked,
+                            },
+                        });
+                    }}
+                />
+            ),
+            description: t('setting.combinedLyricsAndVisualizer', {
+                context: 'description',
+                postProcess: 'sentenceCase',
+            }),
+            title: t('setting.combinedLyricsAndVisualizer', { postProcess: 'sentenceCase' }),
+        },
     ];
 
     return (
@@ -110,4 +126,4 @@ export const SidebarSettings = () => {
             title={t('page.setting.sidebar', { postProcess: 'sentenceCase' })}
         />
     );
-};
+});

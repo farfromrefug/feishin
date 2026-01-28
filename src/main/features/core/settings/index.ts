@@ -1,11 +1,50 @@
 import type { TitleTheme } from '/@/shared/types/types';
 
-import { dialog, ipcMain, nativeTheme, OpenDialogOptions, safeStorage } from 'electron';
+import { app, dialog, ipcMain, nativeTheme, OpenDialogOptions, safeStorage } from 'electron';
 import Store from 'electron-store';
+import path from 'path';
 
-export const store = new Store({
+const getFrame = () => {
+    const isWindows = process.platform === 'win32';
+    const isMacOS = process.platform === 'darwin';
+
+    if (isWindows) {
+        return 'windows';
+    }
+
+    if (isMacOS) {
+        return 'macOS';
+    }
+
+    return 'linux';
+};
+
+const isDevelopment = process.env.NODE_ENV === 'development';
+
+const defaultUserDataPath = app.getPath('userData');
+const storePath = isDevelopment
+    ? path.normalize(`${defaultUserDataPath}-dev`)
+    : path.normalize(defaultUserDataPath);
+
+export const store = new Store<any>({
     beforeEachMigration: (_store, context) => {
         console.log(`settings migrate from ${context.fromVersion} → ${context.toVersion}`);
+    },
+    cwd: storePath,
+    defaults: {
+        disable_auto_updates: false,
+        enableNeteaseTranslation: false,
+        global_media_hotkeys: true,
+        lyrics: ['NetEase', 'lrclib.net'],
+        mediaSession: false,
+        playbackType: 'web',
+        should_prompt_accessibility: true,
+        shown_accessibility_warning: false,
+        window_enable_tray: true,
+        window_exit_to_tray: false,
+        window_minimize_to_tray: false,
+        window_start_minimized: false,
+        window_window_bar_style: getFrame(),
     },
     migrations: {
         '>=0.21.2': (store) => {
@@ -22,7 +61,11 @@ ipcMain.handle('settings-get', (_event, data: { property: string }) => {
 });
 
 ipcMain.on('settings-set', (__event, data: { property: string; value: any }) => {
-    store.set(`${data.property}`, data.value);
+    if (data.value === undefined) {
+        store.delete(data.property);
+    } else {
+        store.set(data.property, data.value);
+    }
 });
 
 ipcMain.handle('password-get', (_event, server: string): null | string => {

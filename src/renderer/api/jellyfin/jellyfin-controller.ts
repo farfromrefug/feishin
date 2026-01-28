@@ -6,6 +6,7 @@ import { z } from 'zod';
 
 import { jfApiClient } from '/@/renderer/api/jellyfin/jellyfin-api';
 import { useRadioStore } from '/@/renderer/features/radio/store/radio-store';
+import { getServerUrl } from '/@/renderer/utils/normalize-server-url';
 import { jfNormalize } from '/@/shared/api/jellyfin/jellyfin-normalize';
 import { JFSongListSort, JFSortOrder, jfType } from '/@/shared/api/jellyfin/jellyfin-types';
 import { getFeatures, hasFeature, sortSongList, VersionInfo } from '/@/shared/api/utils';
@@ -24,6 +25,7 @@ import {
     songListSortMap,
     SortOrder,
     sortOrderMap,
+    Tag,
 } from '/@/shared/types/domain-types';
 import { ServerFeature } from '/@/shared/types/features-types';
 
@@ -217,24 +219,25 @@ export const JellyfinController: InternalControllerEndpoint = {
             throw new Error('No userId found');
         }
 
-        const res = await jfApiClient(apiClientProps).getAlbumArtistDetail({
-            params: {
-                id: query.id,
-                userId: apiClientProps.server?.userId,
-            },
-            query: {
-                Fields: 'Genres, Overview',
-            },
-        });
-
-        const similarArtistsRes = await jfApiClient(apiClientProps).getSimilarArtistList({
-            params: {
-                id: query.id,
-            },
-            query: {
-                Limit: 10,
-            },
-        });
+        const [res, similarArtistsRes] = await Promise.all([
+            jfApiClient(apiClientProps).getAlbumArtistDetail({
+                params: {
+                    id: query.id,
+                    userId: apiClientProps.server?.userId,
+                },
+                query: {
+                    Fields: 'Genres, Overview',
+                },
+            }),
+            jfApiClient(apiClientProps).getSimilarArtistList({
+                params: {
+                    id: query.id,
+                },
+                query: {
+                    Limit: 10,
+                },
+            }),
+        ]);
 
         if (res.status !== 200 || similarArtistsRes.status !== 200) {
             throw new Error('Failed to get album artist detail');
@@ -360,11 +363,11 @@ export const JellyfinController: InternalControllerEndpoint = {
             },
             query: {
                 ...artistQuery,
-                Fields: 'People, Tags',
+                Fields: 'People, Tags, Studios',
                 GenreIds: query.genreIds ? query.genreIds.join(',') : undefined,
                 IncludeItemTypes: 'MusicAlbum',
                 IsFavorite: query.favorite,
-                Limit: query.limit,
+                Limit: query.limit === -1 ? undefined : query.limit,
                 ParentId: getLibraryId(query.musicFolderId),
                 Recursive: true,
                 SearchTerm: query.searchTerm,
@@ -426,10 +429,38 @@ export const JellyfinController: InternalControllerEndpoint = {
             apiClientProps,
             query: { ...query, limit: 1, startIndex: 0 },
         }).then((result) => result!.totalRecordCount!),
+    getArtistRadio: async (args) => {
+        const { apiClientProps, query } = args;
+
+        // For Jellyfin, use instant mix for artist radio
+        const res = await jfApiClient(apiClientProps).getInstantMix({
+            params: {
+                itemId: query.artistId,
+            },
+            query: {
+                Fields: 'Genres, DateCreated, MediaSources, ParentId',
+                Limit: query.count,
+                UserId: apiClientProps.server?.userId || undefined,
+            },
+        });
+
+        if (res.status !== 200) {
+            throw new Error('Failed to get artist radio songs');
+        }
+
+        return res.body.Items.map((song) =>
+            jfNormalize.song(
+                song,
+                apiClientProps.server,
+                args.context?.pathReplace,
+                args.context?.pathReplaceWith,
+            ),
+        );
+    },
     getDownloadUrl: (args) => {
         const { apiClientProps, query } = args;
 
-        return `${apiClientProps.server?.url}/items/${query.id}/download?api_key=${apiClientProps.server?.credential}`;
+        return `${apiClientProps.server?.url}/items/${query.id}/download?apiKey=${apiClientProps.server?.credential}`;
     },
     getFolder: async ({ apiClientProps, query }) => {
         const userId = apiClientProps.server?.userId;
@@ -670,6 +701,23 @@ export const JellyfinController: InternalControllerEndpoint = {
             totalRecordCount: res.body?.TotalRecordCount || 0,
         };
     },
+    getImageUrl: ({ apiClientProps: { server }, baseUrl, query }) => {
+        const { id, size } = query;
+        const imageSize = size;
+        const url = baseUrl || getServerUrl(server);
+
+        if (!url) {
+            return null;
+        }
+
+        // For Jellyfin, we construct the URL pattern
+        // The server will return a 404 or placeholder if no image exists
+        const imageUrl = `${url}/Items/${id}/Images/Primary?quality=96${imageSize ? `&width=${imageSize}` : ''}`;
+
+        // For songs, we might want to fall back to album art, but we don't have albumId here
+        // The caller can handle this if needed
+        return imageUrl;
+    },
     getInternetRadioStations: async (args) => {
         const { apiClientProps } = args;
 
@@ -818,7 +866,14 @@ export const JellyfinController: InternalControllerEndpoint = {
         }
 
         return {
-            items: res.body.Items.map((item) => jfNormalize.song(item, apiClientProps.server)),
+            items: res.body.Items.map((item) =>
+                jfNormalize.song(
+                    item,
+                    apiClientProps.server,
+                    args.context?.pathReplace,
+                    args.context?.pathReplaceWith,
+                ),
+            ),
             startIndex: 0,
             totalRecordCount: res.body.TotalRecordCount,
         };
@@ -871,7 +926,14 @@ export const JellyfinController: InternalControllerEndpoint = {
         }
 
         return {
-            items: res.body.Items.map((item) => jfNormalize.song(item, apiClientProps.server)),
+            items: res.body.Items.map((item) =>
+                jfNormalize.song(
+                    item,
+                    apiClientProps.server,
+                    args.context?.pathReplace,
+                    args.context?.pathReplaceWith,
+                ),
+            ),
             startIndex: 0,
             totalRecordCount: res.body.Items.length || 0,
         };
@@ -886,7 +948,12 @@ export const JellyfinController: InternalControllerEndpoint = {
             throw new Error('Failed to get server info');
         }
 
-        const features = getFeatures(VERSION_INFO, res.body.Version);
+        const defaultFeatures = {};
+
+        const features = {
+            ...defaultFeatures,
+            ...getFeatures(VERSION_INFO, res.body.Version),
+        };
 
         return {
             features,
@@ -916,7 +983,14 @@ export const JellyfinController: InternalControllerEndpoint = {
             if (res.status === 200 && res.body.Items.length) {
                 const results = res.body.Items.reduce<Song[]>((acc, song) => {
                     if (song.Id !== query.songId) {
-                        acc.push(jfNormalize.song(song, apiClientProps.server));
+                        acc.push(
+                            jfNormalize.song(
+                                song,
+                                apiClientProps.server,
+                                args.context?.pathReplace,
+                                args.context?.pathReplaceWith,
+                            ),
+                        );
                     }
 
                     return acc;
@@ -945,7 +1019,14 @@ export const JellyfinController: InternalControllerEndpoint = {
 
         return mix.body.Items.reduce<Song[]>((acc, song) => {
             if (song.Id !== query.songId) {
-                acc.push(jfNormalize.song(song, apiClientProps.server));
+                acc.push(
+                    jfNormalize.song(
+                        song,
+                        apiClientProps.server,
+                        args.context?.pathReplace,
+                        args.context?.pathReplaceWith,
+                    ),
+                );
             }
 
             return acc;
@@ -965,7 +1046,12 @@ export const JellyfinController: InternalControllerEndpoint = {
             throw new Error('Failed to get song detail');
         }
 
-        return jfNormalize.song(res.body, apiClientProps.server);
+        return jfNormalize.song(
+            res.body,
+            apiClientProps.server,
+            args.context?.pathReplace,
+            args.context?.pathReplaceWith,
+        );
     },
     getSongList: async (args) => {
         const { apiClientProps, query } = args;
@@ -1034,19 +1120,19 @@ export const JellyfinController: InternalControllerEndpoint = {
                 ? formatCommaDelimitedString(query.albumIds)
                 : undefined;
 
-            const parentIdFilter = [albumIdsFilter, artistIdsFilter].filter(Boolean).join(',');
-
             const res = await jfApiClient(apiClientProps).getSongList({
                 params: {
                     userId: apiClientProps.server?.userId,
                 },
                 query: {
+                    AlbumIds: albumIdsFilter,
+                    ArtistIds: artistIdsFilter,
                     Fields: 'Genres, DateCreated, MediaSources, ParentId, People, Tags',
                     GenreIds: query.genreIds?.join(','),
                     IncludeItemTypes: 'Audio',
                     IsFavorite: query.favorite,
                     Limit: query.limit,
-                    ParentId: parentIdFilter,
+                    ParentId: getLibraryId(query.musicFolderId),
                     Recursive: true,
                     SearchTerm: query.searchTerm,
                     SortBy: songListSortMap.jellyfin[query.sortBy] || 'Album,SortName',
@@ -1078,7 +1164,12 @@ export const JellyfinController: InternalControllerEndpoint = {
 
         return {
             items: items.map((item) =>
-                jfNormalize.song(item, apiClientProps.server, query.imageSize),
+                jfNormalize.song(
+                    item,
+                    apiClientProps.server,
+                    args.context?.pathReplace,
+                    args.context?.pathReplaceWith,
+                ),
             ),
             startIndex: query.startIndex,
             totalRecordCount,
@@ -1093,7 +1184,7 @@ export const JellyfinController: InternalControllerEndpoint = {
         const { bitrate, format, id, transcode } = query;
         const deviceId = '';
 
-        let url = `${server?.url}/Items/${id}/Download?api_key=${server?.credential}&playSessionId=${deviceId}`;
+        let url = `${server?.url}/Items/${id}/Download?apiKey=${server?.credential}&playSessionId=${deviceId}`;
 
         if (transcode) {
             // Some format appears to be required. Fall back to trusty MP3 if not specified
@@ -1143,12 +1234,40 @@ export const JellyfinController: InternalControllerEndpoint = {
             throw new Error('failed to get tags');
         }
 
-        return {
-            boolTags: res.body.Tags?.sort((a, b) =>
-                a.toLocaleLowerCase().localeCompare(b.toLocaleLowerCase()),
-            ),
-            excluded: { album: [], song: [] },
-        };
+        const studioRes = await jfApiClient(apiClientProps).getStudioList({
+            query: {
+                EnableTotalRecordCount: true,
+                IncludeItemTypes: query.type === LibraryItem.SONG ? 'Audio' : 'MusicAlbum',
+                ParentId: query.folder,
+            },
+        });
+
+        if (studioRes.status !== 200) {
+            throw new Error('failed to get studios');
+        }
+
+        const tags: Tag[] = [];
+        if (res.body.Tags?.length) {
+            tags.push({
+                name: 'Tags',
+                options: res.body.Tags.sort((a, b) =>
+                    a
+                        .toLocaleLowerCase()
+                        .localeCompare(b.toLocaleLowerCase(), undefined, { numeric: true }),
+                ).map((tag) => ({ id: tag, name: tag })),
+            });
+        }
+
+        if (studioRes.body.Items.length) {
+            tags.push({
+                name: 'Studios',
+                options: studioRes.body.Items.sort((a, b) =>
+                    a.Name.toLocaleLowerCase().localeCompare(b.Name.toLocaleLowerCase()),
+                ).map((option) => ({ id: option.Name, name: option.Name })),
+            });
+        }
+
+        return { excluded: { album: [], song: [] }, tags };
     },
     getTopSongs: async (args) => {
         const { apiClientProps, query } = args;
@@ -1178,7 +1297,14 @@ export const JellyfinController: InternalControllerEndpoint = {
         }
 
         return {
-            items: res.body.Items.map((item) => jfNormalize.song(item, apiClientProps.server)),
+            items: res.body.Items.map((item) =>
+                jfNormalize.song(
+                    item,
+                    apiClientProps.server,
+                    args.context?.pathReplace,
+                    args.context?.pathReplaceWith,
+                ),
+            ),
             startIndex: 0,
             totalRecordCount: res.body.TotalRecordCount,
         };
@@ -1263,7 +1389,12 @@ export const JellyfinController: InternalControllerEndpoint = {
         }
 
         const existingSongs = existingSongsRes.body.Items.map((item) =>
-            jfNormalize.song(item, apiClientProps.server),
+            jfNormalize.song(
+                item,
+                apiClientProps.server,
+                args.context?.pathReplace,
+                args.context?.pathReplaceWith,
+            ),
         );
 
         // 2. Get playlist detail to get the name
@@ -1503,7 +1634,14 @@ export const JellyfinController: InternalControllerEndpoint = {
                 jfNormalize.albumArtist(item, apiClientProps.server),
             ),
             albums: albums.map((item) => jfNormalize.album(item, apiClientProps.server)),
-            songs: songs.map((item) => jfNormalize.song(item, apiClientProps.server)),
+            songs: songs.map((item) =>
+                jfNormalize.song(
+                    item,
+                    apiClientProps.server,
+                    args.context?.pathReplace,
+                    args.context?.pathReplaceWith,
+                ),
+            ),
         };
     },
     updateInternetRadioStation: async (args) => {

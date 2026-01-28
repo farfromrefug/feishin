@@ -14,7 +14,8 @@
             "tracks": "$t(entity.track_other)",
             "nowPlaying": "ara sona",
             "shared": "$t(entity.playlist_other) compartida",
-            "favorites": "$t(entity.favorite_other)"
+            "favorites": "$t(entity.favorite_other)",
+            "radio": "$t(entity.radioStation_other)"
         },
         "albumArtistDetail": {
             "relatedArtists": "$t(entity.artist_other) similars",
@@ -25,7 +26,9 @@
             "viewDiscography": "Mosta la discografia",
             "topSongs": "millors cançons",
             "topSongsFrom": "les millors cançons de {{title}}",
-            "viewAll": "mostra-ho tot"
+            "viewAll": "mostra-ho tot",
+            "groupingTypeAll": "tots els tipus de llançaments",
+            "groupingTypePrimary": "tipus principals de llançament"
         },
         "albumArtistList": {
             "title": "$t(entity.albumArtist_other)"
@@ -161,7 +164,8 @@
             "transcoding": "transcodificació",
             "discord": "discord",
             "logger": "registres",
-            "playerFilters": "filtres de reproducció"
+            "playerFilters": "filtres de reproducció",
+            "lyricsDisplay": "mostra la lletra"
         },
         "globalSearch": {
             "commands": {
@@ -184,6 +188,9 @@
         },
         "folderList": {
             "title": "$t(entity.folder_other)"
+        },
+        "radioList": {
+            "title": "emissores de ràdio"
         }
     },
     "common": {
@@ -301,7 +308,13 @@
         "sort": "ordre",
         "gridRows": "files de la quadrícula",
         "tableColumns": "columnes de la taula",
-        "itemsMore": "{{count}} més"
+        "itemsMore": "{{count}} més",
+        "countSelected": "{{count}} seleccionats",
+        "retry": "reintenta",
+        "example": "exemple",
+        "mood": "estat d'ànim",
+        "filter_single": "senzill",
+        "filter_multiple": "multi"
     },
     "entity": {
         "album_one": "àlbum",
@@ -355,7 +368,13 @@
         "song_other": "cançons",
         "favorite_one": "preferit",
         "favorite_many": "preferits",
-        "favorite_other": "preferits"
+        "favorite_other": "preferits",
+        "radioStation_one": "emissora de ràdio",
+        "radioStation_many": "emissores de ràdio",
+        "radioStation_other": "emissores de ràdio",
+        "radioStationWithCount_one": "{{count}} emissora de ràdio",
+        "radioStationWithCount_many": "{{count}} emissores de ràdio",
+        "radioStationWithCount_other": "{{count}} emissores de ràdio"
     },
     "form": {
         "addToPlaylist": {
@@ -403,7 +422,10 @@
             "success": "servidor afegit correctament",
             "title": "afegeix un servidor",
             "input_preferInstantMix": "prefereix el mix instantani",
-            "input_preferInstantMixDescription": "utilitza només el mix instantani per obtenir cançons similars. útil si teniu complements que modifiquin aquest comportament"
+            "input_preferInstantMixDescription": "utilitza només el mix instantani per obtenir cançons similars. útil si teniu complements que modifiquin aquest comportament",
+            "input_preferRemoteUrl": "prefereix l'url públic",
+            "input_remoteUrl": "url públic",
+            "input_remoteUrlPlaceholder": "opcional: url públic per característiques externes"
         },
         "shareItem": {
             "description": "descripció",
@@ -445,6 +467,21 @@
             "input_played_optionAll": "totes les pistes",
             "input_played_optionUnplayed": "només les pistes sense reproduir",
             "input_played_optionPlayed": "només les pistes reproduïdes"
+        },
+        "createRadioStation": {
+            "success": "emissora de ràdio creada amb èxit",
+            "title": "crea una emissora de ràdio",
+            "input_homepageUrl": "URL de la pàgina d'inici",
+            "input_name": "nom",
+            "input_streamUrl": "URL de transmissió"
+        },
+        "saveQueue": {
+            "success": "cua de reproducció desada al servidor"
+        },
+        "lyricsExport": {
+            "export": "exporta la lletra",
+            "input_synced": "exporta la lletra sincronitzada",
+            "input_offset": "$t(setting.lyricOffset)"
         }
     },
     "action": {
@@ -479,7 +516,13 @@
         "shuffle": "mescla",
         "shuffleAll": "mescla-ho tot",
         "shuffleSelected": "mescla els seleccionats",
-        "viewMore": "mostra'n més"
+        "viewMore": "mostra'n més",
+        "createRadioStation": "crea $t(entity.radioStation_one)",
+        "deleteRadioStation": "elimina $t(entity.radioStation_one)",
+        "addOrRemoveFromSelection": "afegeix o elimina de la selecció",
+        "selectRangeOfItems": "selecciona un interval d'elements",
+        "selectAll": "selecciona-ho tot",
+        "openApplicationDirectory": "obre el directori de l'aplicació"
     },
     "setting": {
         "language_description": "estableix l'idioma de l'aplicació ($t(common.restartRequired))",
@@ -643,8 +686,6 @@
         "playbackStyle_optionNormal": "normal",
         "playButtonBehavior": "comportament del botó de reproducció",
         "playButtonBehavior_description": "estableix el comportament predeterminat del botó de reproducció quan s'afegeixen cançons a la cua",
-        "playerAlbumArtResolution": "resolució de la caràtula de l'àlbum al reproductor",
-        "playerAlbumArtResolution_description": "la resolució de la previsualització gran de la caràtula al reproductor. si és més alta, serà més nítida, però es carregarà més lent. el valor predeterminat 0 vol dir automàtic",
         "playerbarOpenDrawer": "activa el reproductor en pantalla completa",
         "playerbarOpenDrawer_description": "permet fer clic a la barra de reproducció per obrir el reproductor de pantalla completa",
         "remotePassword": "contrasenya del servidor de control remot",
@@ -729,7 +770,7 @@
         "releaseChannel": "canal de versions",
         "releaseChannel_description": "tria entre versions estables i versions beta per les actualitzacions automàtiques",
         "mediaSession": "activa Media Session",
-        "mediaSession_description": "activa la integració amb Windows Media Session per mostrar els controls multimèdia i les metadades a l'indicador de volum del sistema i la pantalla de bloqueig (només per Windows)",
+        "mediaSession_description": "activa la integració amb Media Session per mostrar els controls multimèdia i les metadades a l'indicador de volum del sistema i la pantalla de bloqueig",
         "crossfadeStyle": "estil de fosa encadenada",
         "discordRichPresence": "estat d'activitat de {{discord}}",
         "enableAutoTranslation_description": "activa la traducció automàtica en carregar la lletra",
@@ -787,7 +828,35 @@
         "queryBuilderCustomFields_inputLabel": "discogràfica",
         "queryBuilderCustomFields_inputTag": "etiqueta",
         "queryBuilderCustomFields": "camps personalitzats",
-        "queryBuilderCustomFields_description": "afegeix camps personalitzats pel constructor de consultes"
+        "queryBuilderCustomFields_description": "afegeix camps personalitzats pel constructor de consultes",
+        "useThemeAccentColor": "fes servir el color d'accent del tema",
+        "useThemeAccentColor_description": "fes servir el color primari definit pel tema seleccionat en comptes del color d'accent personalitzat",
+        "artistRadioCount_description": "estableix el número de cançons per cercar per la ràdio d'artista i pista",
+        "artistRadioCount": "recompte de ràdios d'artista o pista",
+        "imageResolution": "resolució d'imatge",
+        "imageResolution_description": "la resolució per les imatges que s'utilitzen a l'aplicació. un valor de 0 equival a la resolució nativa de la imatge",
+        "imageResolution_optionTable": "taula",
+        "imageResolution_optionItemCard": "targeta d'element",
+        "imageResolution_optionSidebar": "tauler lateral",
+        "imageResolution_optionHeader": "encapçalament",
+        "imageResolution_optionFullScreenPlayer": "reproductor de pantalla completa",
+        "showRatings_description": "controla si es mostren les estrelles de valoració a la interfície",
+        "showRatings": "mostra la valoració d'estrelles",
+        "combinedLyricsAndVisualizer_description": "combina la lletra i el visualitzador en un sol tauler",
+        "combinedLyricsAndVisualizer": "combina la lletra i el visualitzador al tauler lateral del reproductor",
+        "artistReleaseTypeConfiguration": "configuració de tipus de llançament d'artista",
+        "artistReleaseTypeConfiguration_description": "configura quins llançaments es mostren, i en quin ordre, a la pàgina d'artista de l'àlbum",
+        "hotkey_listNavigateToPage": "navega per la llista fins a la pàgina de l'element",
+        "hotkey_listPlayDefault": "reprodueix llista",
+        "hotkey_listPlayLast": "reprodueix la llista al final",
+        "hotkey_listPlayNext": "reprodueix la llista a continuació",
+        "hotkey_listPlayNow": "reprodueix la llista ara",
+        "mpvExtraParameters": "paràmetres addicionals d'mpv",
+        "mpvExtraParameters_description": "arguments addicionals per l'mpv",
+        "pathReplace": "substitució de la ruta de l'arxiu",
+        "pathReplace_description": "substitueix la ruta d'arxiu predeterminada del servidor",
+        "pathReplace_optionRemovePrefix": "elimina el prefix",
+        "pathReplace_optionAddPrefix": "afegeix prefix"
     },
     "table": {
         "column": {
@@ -884,7 +953,9 @@
                 "bitDepth": "$t(common.bitDepth)",
                 "genreBadge": "$t(entity.genre_one) (insígnies)",
                 "image": "imatge",
-                "sampleRate": "$t(common.sampleRate)"
+                "sampleRate": "$t(common.sampleRate)",
+                "composer": "compositor",
+                "titleArtist": "$t(common.title) (artista)"
             },
             "view": {
                 "table": "taula",
@@ -953,8 +1024,8 @@
         "repeat_all": "repetició",
         "shuffle": "reprodueix (mesclat)",
         "shuffle_off": "reproducció aleatòria desactivada",
-        "addLast": "afegeix al final",
-        "addNext": "afegeix a continuació",
+        "addLast": "al final",
+        "addNext": "a continuació",
         "favorite": "marcar com a preferida",
         "mute": "silencia",
         "next": "següent",
@@ -970,12 +1041,14 @@
         "toggleFullscreenPlayer": "activa el reproductor de pantalla completa",
         "unfavorite": "elimina de preferits",
         "pause": "pausa",
-        "addLastShuffled": "afegeix al final (mesclat)",
-        "addNextShuffled": "afegeix a continuació (mesclat)",
+        "addLastShuffled": "al final (mesclat)",
+        "addNextShuffled": "a continuació (mesclat)",
         "holdToShuffle": "mantén premut per mesclar",
-        "queueType": "tipus de cua",
-        "queueType_default": "predeterminat",
-        "queueType_priority": "prioritat"
+        "lyrics": "lletra",
+        "restoreQueueFromServer": "restaura la cua del servidor",
+        "saveQueueToServer": "desa la cua al servidor",
+        "artistRadio": "ràdio de l'artista",
+        "trackRadio": "ràdio de la pista"
     },
     "error": {
         "credentialsRequired": "credencials requerides",
@@ -1001,7 +1074,12 @@
         "notificationDenied": "s'han negat els permisos per enviar notificacions. aquesta opció no té cap efecte",
         "playbackError": "hi ha hagut un error en intentar reproduir el mitjà",
         "remoteDisableError": "hi ha hagut un error en intentar $t(common.disable) el servidor remot",
-        "endpointNotImplementedError": "el punt final {{endpoint}} no està implementat per {{serverType}}"
+        "endpointNotImplementedError": "el punt final {{endpoint}} no està implementat per {{serverType}}",
+        "multipleServerSaveQueueError": "la cua de reproducció té una o més cançons que no són del servidor actual, cosa que no és compatible",
+        "saveQueueFailed": "error en desar la cua",
+        "settingsSyncError": "hi ha discrepàncies entre la configuració del renderitzador i el procés principal. reinicieu l'aplicació per aplicar els canvis",
+        "noNetwork": "servidor no disponible",
+        "noNetworkDescription": "no s'ha pogut connectar amb el servidor"
     },
     "releaseType": {
         "primary": {
@@ -1055,5 +1133,160 @@
     "queryBuilder": {
         "standardTags": "etiquetes estàndard",
         "customTags": "etiquetes personalitzades"
+    },
+    "datetime": {
+        "minuteShort": "min",
+        "secondShort": "s",
+        "hourShort": "h",
+        "dayShort": "d"
+    },
+    "visualizer": {
+        "visualizerType": "tipus de visualitzador",
+        "cyclePresets": "opcions preconfigurades",
+        "cycleTime": "duració d'un cicle (segons)",
+        "includeAllPresets": "inclou totes les opcions predeterminades",
+        "ignoredPresets": "ignora les opcions predeterminades",
+        "selectedPresets": "opcions predeterminades seleccionades",
+        "randomizeNextPreset": "tria la següent opcions predeterminada a l'atzar",
+        "blendTime": "duració de la mescla",
+        "presets": "opcions predeterminades",
+        "selectPreset": "selecciona una opció predeterminada",
+        "applyPreset": "aplica l'opció predeterminada",
+        "saveAsPreset": "desa com a opció predeterminada",
+        "updatePreset": "actualitza l'opció predeterminada",
+        "copyConfiguration": "copia la configuració",
+        "pasteConfiguration": "enganxa la configuració",
+        "pasteConfigurationPlaceholder": "enganxa la configuració JSON aquí...",
+        "pasteFromClipboard": "enganxa des del portaretalls",
+        "applyConfiguration": "aplica la configuració",
+        "configCopied": "configuració copiada al portaretalls",
+        "configCopyFailed": "error en copiar la configuració",
+        "configPasted": "configuració aplicada correctament",
+        "configPasteFailed": "Error en aplicar la configuració. Reviseu-ne el format.",
+        "configPasteReadFailed": "Error en llegir del portaretalls",
+        "presetName": "Nom de l'opció predeterminada",
+        "presetNamePlaceholder": "Escriviu el nom de l'opció predeterminada",
+        "general": "General",
+        "mode": "Mode",
+        "mode1To8": "Mode 1 - 8",
+        "mode10": "Mode 10",
+        "barSpace": "Espai entre barres",
+        "lineWidth": "Amplitud de línia",
+        "fillAlpha": "Omplir alfa",
+        "channelLayout": "Disseny del canal",
+        "maxFPS": "FPS màxims",
+        "opacity": "Opacitat",
+        "customGradients": "Degradats personalitzats",
+        "addCustomGradient": "Afegeix un degradat personalitzat",
+        "gradientName": "Nom del degradat",
+        "gradientNamePlaceholder": "Nom del degradat",
+        "vertical": "Vertical",
+        "horizontal": "Horitzontal",
+        "colorStops": "Parades de color",
+        "addColor": "Afegeix el color",
+        "position": "Posició",
+        "level": "Nivell",
+        "remove": "Elimina",
+        "custom": "Personalitzat",
+        "builtIn": "Integrat",
+        "colors": "Colors",
+        "colorMode": "Mode de color",
+        "gradient": "Degradat",
+        "gradientLeft": "Esquerra del degradat",
+        "gradientRight": "Dreta del degradat",
+        "fft": "FFT",
+        "fftSize": "Mida del FFT",
+        "smoothing": "Suavitzador",
+        "frequencyRangeAndScaling": "Escala i rang de freqüència",
+        "minimumFrequency": "Freqüència mínima",
+        "maximumFrequency": "Freqüència màxima",
+        "frequencyScale": "Escala de freqüència",
+        "sensitivity": "Sensibilitat",
+        "weightingFilter": "Filtre de pes",
+        "minimumDecibels": "Decibels mínims",
+        "maximumDecibels": "Decibels màxims",
+        "linearAmplitude": "Amplitud lineal",
+        "linearBoost": "Augment lineal",
+        "peakBehavior": "Comportament del pic",
+        "showPeaks": "Mostra els pics",
+        "fadePeaks": "Pics de fosa",
+        "peakLine": "Línea del pic",
+        "gravity": "Gravetat",
+        "peakFadeTime": "Temps de fosa del pic (ms)",
+        "peakHoldTime": "Temps d'espera del pic (ms)",
+        "radialSpectrum": "Espectre radial",
+        "radial": "Radial",
+        "radialInvert": "Invertir el radial",
+        "spinSpeed": "Velocitat de gir",
+        "radius": "Radi",
+        "reflexMirror": "Mirall del reflex",
+        "reflexFit": "Ajustament del reflex",
+        "reflexRatio": "Proporció del reflex",
+        "reflexAlpha": "Alfa del reflex",
+        "reflexBrightness": "Brillantor del reflex",
+        "mirror": "Mirall",
+        "miscellaneousSettings": "Configuració miscel·lànea",
+        "alphaBars": "Barres alfa",
+        "ansiBands": "Bandes ANSI",
+        "ledBars": "Barres LED",
+        "trueLeds": "LEDs reals",
+        "lumiBars": "Barres Lumi",
+        "outlineBars": "Barres de vora",
+        "roundBars": "Barres arrodonides",
+        "lowResolution": "Baixa resolució",
+        "splitGradient": "Degradat dividit",
+        "showFPS": "Mostra els FPS",
+        "showScaleX": "Mostra l'escala X",
+        "noteLabels": "Etiquetes de nota",
+        "showScaleY": "Mostra l'escala Y",
+        "options": {
+            "colorMode": {
+                "gradient": "Degradat",
+                "barIndex": "Índex de barra",
+                "barLevel": "Nivell de barra"
+            },
+            "gradient": {
+                "classic": "Classic",
+                "prism": "Prisme",
+                "rainbow": "Arc de Sant Martí",
+                "steelblue": "Blau d'acer",
+                "orangered": "Vermell ataronjat"
+            },
+            "channelLayout": {
+                "single": "Únic",
+                "dualCombined": "Dual-Combinat",
+                "dualHorizontal": "Dual-Horitzontal",
+                "dualVertical": "Dual-Vertical"
+            },
+            "frequencyScale": {
+                "bark": "Escala Bark",
+                "linear": "Escala Lineal",
+                "log": "Escala logarítmica",
+                "mel": "Escala Mel",
+                "none": "Cap"
+            },
+            "weightingFilter": {
+                "none": "Cap",
+                "a": "A",
+                "b": "B",
+                "c": "C",
+                "d": "D",
+                "z": "Z"
+            },
+            "mode": {
+                "0": "[0] Freqüències discretes",
+                "1": "[1] 1/24a octava / 240 bandes",
+                "2": "[2] 1/12a octava / 120 bandes",
+                "3": "[3] 1/8a octava / 80 bandes",
+                "4": "[4] 1/6a octava / 60 bandes",
+                "5": "[5] 1/4a octava / 40 bandes",
+                "6": "[6] 1/3a octava / 30 bandes",
+                "7": "[7] Mitja octava / 20 bandes",
+                "8": "[8] Octava completa / 10 bandes",
+                "10": "[10] Línia / Gràfic d'àrea"
+            }
+        },
+        "pasteGradient": "enganxa degradat",
+        "pasteGradientPlaceholder": "enganxa el degradat JSON aquí..."
     }
 }

@@ -7,10 +7,10 @@ import { shallow } from 'zustand/shallow';
 import styles from './main-content.module.css';
 
 import { FullScreenOverlay } from '/@/renderer/layouts/default-layout/full-screen-overlay';
+import { FullScreenVisualizerOverlay } from '/@/renderer/layouts/default-layout/full-screen-visualizer-overlay';
 import { LeftSidebar } from '/@/renderer/layouts/default-layout/left-sidebar';
 import { RightSidebar } from '/@/renderer/layouts/default-layout/right-sidebar';
-import { useAppStore, useAppStoreActions } from '/@/renderer/store';
-import { useGeneralSettings } from '/@/renderer/store/settings.store';
+import { useAppStore, useAppStoreActions, useSideQueueType } from '/@/renderer/store';
 import { constrainRightSidebarWidth, constrainSidebarWidth } from '/@/renderer/utils';
 import { Spinner } from '/@/shared/components/spinner/spinner';
 
@@ -27,7 +27,7 @@ export const MainContent = ({ shell }: { shell?: boolean }) => {
         shallow,
     );
     const { setSideBar } = useAppStoreActions();
-    const { sideQueueType } = useGeneralSettings();
+    const sideQueueType = useSideQueueType();
     const [isResizing, setIsResizing] = useState(false);
     const [isResizingRight, setIsResizingRight] = useState(false);
 
@@ -144,6 +144,7 @@ export const MainContent = ({ shell }: { shell?: boolean }) => {
         >
             {!shell && (
                 <>
+                    <FullScreenVisualizerOverlay />
                     <FullScreenOverlay />
                     <LeftSidebar isResizing={isResizing} startResizing={startResizing} />
                     <RightSidebar

@@ -3,11 +3,12 @@ import type { RefObject } from 'react';
 import isElectron from 'is-electron';
 import { useEffect, useImperativeHandle, useRef, useState } from 'react';
 
+import { eventEmitter } from '/@/renderer/events/event-emitter';
 import { usePlayerEvents } from '/@/renderer/features/player/audio-player/hooks/use-player-events';
 import { getSongUrl } from '/@/renderer/features/player/audio-player/hooks/use-stream-url';
 import { AudioPlayer, PlayerOnProgressProps } from '/@/renderer/features/player/audio-player/types';
 import { useRadioStore } from '/@/renderer/features/radio/hooks/use-radio-player';
-import { getMpvProperties } from '/@/renderer/features/settings/components/playback/mpv-settings';
+import { getMpvProperties } from '/@/renderer/features/settings/components/playback/mpv-properties';
 import {
     usePlaybackSettings,
     usePlayerActions,
@@ -55,9 +56,22 @@ export const MpvPlayerEngine = (props: MpvPlayerEngineProps) => {
     const hasPopulatedQueueRef = useRef<boolean>(false);
     const isMountedRef = useRef<boolean>(true);
 
-    const { transcode } = usePlaybackSettings();
+    const { audioDeviceId, transcode } = usePlaybackSettings();
     const mpvExtraParameters = useSettingsStore((store) => store.playback.mpvExtraParameters);
     const mpvProperties = useSettingsStore((store) => store.playback.mpvProperties);
+    const [reloadTrigger, setReloadTrigger] = useState(0);
+
+    useEffect(() => {
+        const handleMpvReload = () => {
+            setReloadTrigger((prev) => prev + 1);
+        };
+
+        eventEmitter.on('MPV_RELOAD', handleMpvReload);
+
+        return () => {
+            eventEmitter.off('MPV_RELOAD', handleMpvReload);
+        };
+    }, []);
 
     // Start the mpv instance on startup
     useEffect(() => {
@@ -92,8 +106,14 @@ export const MpvPlayerEngine = (props: MpvPlayerEngineProps) => {
                 volume: volume,
             };
 
+            const extraParameters: string[] = [...mpvExtraParameters];
+
+            if (audioDeviceId) {
+                extraParameters.push(`--audio-device=${audioDeviceId}`);
+            }
+
             await mpvPlayer?.initialize({
-                extraParameters: mpvExtraParameters,
+                extraParameters,
                 properties,
             });
 
@@ -132,8 +152,9 @@ export const MpvPlayerEngine = (props: MpvPlayerEngineProps) => {
         // Volume and speed changes are handled by separate useEffects below to avoid
         // reinitializing the entire player. Transcode changes are handled by queue
         // update callbacks in usePlayerEvents.
+        // reloadTrigger is included to allow manual reload via MPV_RELOAD event.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [mpvExtraParameters, mpvProperties]);
+    }, [mpvExtraParameters, mpvProperties, audioDeviceId, reloadTrigger]);
 
     // Update volume
     useEffect(() => {
@@ -260,9 +281,7 @@ export const MpvPlayerEngine = (props: MpvPlayerEngineProps) => {
             onPlayerPlay: () => {
                 replaceMpvQueue(transcode);
             },
-            onQueueCleared: () => {
-                console.log('queue cleared');
-            },
+            onQueueCleared: () => {},
         },
         [transcode],
     );

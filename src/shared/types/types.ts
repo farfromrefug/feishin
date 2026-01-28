@@ -168,6 +168,7 @@ export enum TableColumn {
     CHANNELS = 'channels',
     CODEC = 'container',
     COMMENT = 'comment',
+    COMPOSER = 'composer',
     DATE_ADDED = 'createdAt',
     DISC_NUMBER = 'discNumber',
     DURATION = 'duration',
@@ -187,6 +188,7 @@ export enum TableColumn {
     SKIP = 'skip',
     SONG_COUNT = 'songCount',
     TITLE = 'name',
+    TITLE_ARTIST = 'titleArtist',
     TITLE_COMBINED = 'titleCombined',
     TRACK_NUMBER = 'trackNumber',
     USER_FAVORITE = 'userFavorite',
@@ -250,6 +252,8 @@ export type ServerListItem = {
     id: string;
     name: string;
     ndCredential?: string;
+    preferRemoteUrl?: boolean;
+    remoteUrl?: string;
     savePassword?: boolean;
     type: ServerType;
     url: string;

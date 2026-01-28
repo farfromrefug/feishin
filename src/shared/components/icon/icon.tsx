@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import { motion } from 'motion/react';
-import { type ComponentType, forwardRef } from 'react';
+import { type ComponentType, forwardRef, memo, useMemo } from 'react';
 import { IconBaseProps } from 'react-icons';
 import { FaLastfmSquare } from 'react-icons/fa';
 import {
@@ -39,6 +39,7 @@ import {
     LuDownload,
     LuEllipsis,
     LuEllipsisVertical,
+    LuExpand,
     LuExternalLink,
     LuFileJson,
     LuFlag,
@@ -49,6 +50,7 @@ import {
     LuGripVertical,
     LuHardDrive,
     LuHash,
+    LuHeadphones,
     LuHeart,
     LuHeartCrack,
     LuImage,
@@ -160,8 +162,14 @@ export const AppIcon = {
     edit: LuPencilLine,
     ellipsisHorizontal: LuEllipsis,
     ellipsisVertical: LuEllipsisVertical,
+    emptyAlbumImage: LuDisc3,
+    emptyArtistImage: LuUser,
+    emptyGenreImage: LuFlag,
     emptyImage: LuDisc3,
+    emptyPlaylistImage: LuListMusic,
+    emptySongImage: LuMusic,
     error: LuShieldAlert,
+    expand: LuExpand,
     externalLink: LuExternalLink,
     favorite: LuHeart,
     fileJson: LuFileJson,
@@ -175,6 +183,7 @@ export const AppIcon = {
     itemAlbum: LuDisc3,
     itemSong: LuMusic,
     keyboard: LuKeyboard,
+    lastPlayed: LuHeadphones,
     layoutGrid: LuLayoutGrid,
     layoutList: LuList,
     layoutTable: LuTable,
@@ -271,19 +280,23 @@ type IconColor =
     | 'success'
     | 'warn';
 
-export const Icon = forwardRef<HTMLDivElement, IconProps>((props, ref) => {
+const _Icon = forwardRef<HTMLDivElement, IconProps>((props, ref) => {
     const { animate, className, color, fill, icon, size = 'md' } = props;
 
     const IconComponent: ComponentType<any> = AppIcon[icon];
 
-    const classNames = clsx(className, {
-        [styles.fill]: true,
-        [styles.pulse]: animate === 'pulse',
-        [styles.spin]: animate === 'spin',
-        [styles[`color-${color || fill}`]]: color || fill,
-        [styles[`fill-${fill}`]]: fill,
-        [styles[`size-${size}`]]: true,
-    });
+    const classNames = useMemo(
+        () =>
+            clsx(className, {
+                [styles.fill]: true,
+                [styles.pulse]: animate === 'pulse',
+                [styles.spin]: animate === 'spin',
+                [styles[`color-${color || fill}`]]: color || fill,
+                [styles[`fill-${fill}`]]: fill,
+                [styles[`size-${size}`]]: true,
+            }),
+        [animate, className, color, fill, size],
+    );
 
     return (
         <IconComponent
@@ -294,6 +307,10 @@ export const Icon = forwardRef<HTMLDivElement, IconProps>((props, ref) => {
         />
     );
 });
+
+_Icon.displayName = 'Icon';
+
+export const Icon = memo(_Icon);
 
 Icon.displayName = 'Icon';
 

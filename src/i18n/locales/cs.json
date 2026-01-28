@@ -33,13 +33,12 @@
         "viewQueue": "zobrazit frontu",
         "addLastShuffled": "poslední (náhodně)",
         "addNextShuffled": "další (náhodně)",
-        "queueType": "typ fronty",
-        "queueType_default": "výchozí",
-        "queueType_priority": "priorita",
         "holdToShuffle": "podržte pro zamíchání",
         "lyrics": "texty",
         "restoreQueueFromServer": "obnovit frontu ze serveru",
-        "saveQueueToServer": "uložit frontu na server"
+        "saveQueueToServer": "uložit frontu na server",
+        "artistRadio": "rádio umělce",
+        "trackRadio": "rádio skladby"
     },
     "setting": {
         "crossfadeStyle_description": "vyberte způsob prolnutí u přehrávače zvuku",
@@ -207,8 +206,6 @@
         "passwordStore": "ukládání hesel / tajných klíčů",
         "mpvExtraParameters_help": "jeden na řádek",
         "homeConfiguration": "nastavení domovské stránky",
-        "playerAlbumArtResolution_description": "rozlišení náhledu obalu alba ve velkém přehrávači. větší hodnota znamená kvalitnější obrázek, ale může se déle načítat. výchozí hodnota je 0, což znamená automatické rozlišení",
-        "playerAlbumArtResolution": "rozlišení obalu alba v přehrávači",
         "externalLinks_description": "zapne zobrazování externích odkazů (Last.fm, MusicBrainz) na stránce umělce/alba",
         "clearCacheSuccess": "mezipaměť úspěšně vymazána",
         "externalLinks": "zobrazit externí odkazy",
@@ -289,7 +286,7 @@
         "releaseChannel": "kanál vydání",
         "releaseChannel_description": "vyberte si mezi stabilními vydáními nebo beta vydáními pro automatické aktualizace",
         "mediaSession": "povolit relaci médií",
-        "mediaSession_description": "povolí integraci do služby Windows Media Session, což zobrazí ovládání a metadata médií v překrytí systémové hlasitosti a na zamykací obrazovce (pouze Windows)",
+        "mediaSession_description": "povolí integraci do služby Media Session, což zobrazí ovládání a metadata médií v překrytí systémové hlasitosti a na zamykací obrazovce",
         "exportImportSettings_control_description": "exportovat a importovat nastavení pomocí souboru JSON",
         "exportImportSettings_control_exportText": "exportovat nastavení",
         "exportImportSettings_control_importText": "importovat nastavení",
@@ -349,7 +346,33 @@
         "logLevel_optionInfo": "informace",
         "logLevel_optionWarn": "varování",
         "useThemeAccentColor": "použít barvu motivu",
-        "useThemeAccentColor_description": "použít primární barvu definovanou ve zvoleném motivu namísto vlastní barvy rozhraní"
+        "useThemeAccentColor_description": "použít primární barvu definovanou ve zvoleném motivu namísto vlastní barvy rozhraní",
+        "artistRadioCount_description": "nastaví počet skladeb, které načíst pro rádio umělce a rádio skladby",
+        "artistRadioCount": "počet skladeb pro rádio umělce/skladby",
+        "imageResolution": "rozlišení obrázků",
+        "imageResolution_description": "rozlišení obrázků používaných napříč aplikací. nastavení hodnoty 0 použije nativní rozlišení obrázku",
+        "imageResolution_optionTable": "tabulka",
+        "imageResolution_optionItemCard": "karta položky",
+        "imageResolution_optionSidebar": "postranní lišta",
+        "imageResolution_optionHeader": "záhlaví",
+        "imageResolution_optionFullScreenPlayer": "přehrávač na celé obrazovce",
+        "combinedLyricsAndVisualizer_description": "spojit texty a vizualizér do jednoho panelu",
+        "combinedLyricsAndVisualizer": "spojit texty a vizualizér v postranní liště přehrávače",
+        "showRatings_description": "ovládá, zda se funkce hodnocení pomocí hvězdiček objeví v rozhraní",
+        "showRatings": "zobrazit hodnocení pomocí hvězdiček",
+        "artistReleaseTypeConfiguration": "nastavení typu vydání umělce",
+        "artistReleaseTypeConfiguration_description": "nastavit, jaké typy vydání a v jakém pořadí jsou zobrazeny na stránce umělce alba",
+        "mpvExtraParameters": "extra parametry mpv",
+        "mpvExtraParameters_description": "další argumenty, které předat přehrávači mpv",
+        "hotkey_listNavigateToPage": "navigace na stránku položky v seznamu",
+        "hotkey_listPlayDefault": "přehrání v seznamu",
+        "hotkey_listPlayLast": "přehrání poslední položky v seznamu",
+        "hotkey_listPlayNext": "přehrání další položky v seznamu",
+        "hotkey_listPlayNow": "okamžité přehrání v seznamu",
+        "pathReplace": "nahrazení cesty k souborům",
+        "pathReplace_description": "nahradit výchozí cestu k souborům vašeho serveru",
+        "pathReplace_optionRemovePrefix": "odstranit předponu",
+        "pathReplace_optionAddPrefix": "přidat předponu"
     },
     "action": {
         "editPlaylist": "upravit $t(entity.playlist_one)",
@@ -385,7 +408,11 @@
         "holdToMoveToTop": "podržte pro přesunutí nahoru",
         "holdToMoveToBottom": "podržte pro přesunutí dolů",
         "createRadioStation": "vytvořit $t(entity.radioStation_one)",
-        "deleteRadioStation": "odstranit $t(entity.radioStation_one)"
+        "deleteRadioStation": "odstranit $t(entity.radioStation_one)",
+        "openApplicationDirectory": "otevřít adresář aplikace",
+        "addOrRemoveFromSelection": "přidat nebo odebrat z výběru",
+        "selectRangeOfItems": "vyberte rozsah položek",
+        "selectAll": "vybrat vše"
     },
     "common": {
         "backward": "zpátky",
@@ -502,7 +529,13 @@
         "tableColumns": "sloupce tabulky",
         "itemsMore": "{{count}} dalších",
         "noFilters": "nejsou nastaveny žádné filtry",
-        "view": "zobrazit"
+        "view": "zobrazit",
+        "countSelected": "vybráno {{count}}",
+        "retry": "zkusit znovu",
+        "mood": "nálada",
+        "example": "příklad",
+        "filter_single": "jeden",
+        "filter_multiple": "několik"
     },
     "table": {
         "config": {
@@ -575,7 +608,9 @@
                 "genreBadge": "$t(entity.genre_one) (značky)",
                 "image": "obrázek",
                 "bitDepth": "$t(common.bitDepth)",
-                "sampleRate": "$t(common.sampleRate)"
+                "sampleRate": "$t(common.sampleRate)",
+                "composer": "skladatel",
+                "titleArtist": "$t(common.title) (umělec)"
             }
         },
         "column": {
@@ -634,7 +669,10 @@
         "badValue": "neplatná možnost „{{value}}“. tato možnost již neexistuje",
         "notificationDenied": "oprávnění k posílání oznámení byla zamítnuta. toto nastavení nemá žádný vliv",
         "multipleServerSaveQueueError": "fronta přehrávání má jednu nebo více skladeb, které nejsou z aktuálního serveru. tato funkce není podporována",
-        "saveQueueFailed": "nepodařilo se uložit frontu"
+        "saveQueueFailed": "nepodařilo se uložit frontu",
+        "settingsSyncError": "byly zjištěny nesrovnalosti mezi nastavením v rendereru a hlavním procesem. restartujte aplikaci, aby se změny projevily",
+        "noNetwork": "server je nedostupný",
+        "noNetworkDescription": "k tomuto serveru se nepodařilo připojit"
     },
     "filter": {
         "mostPlayed": "nejvíce přehráváno",
@@ -804,7 +842,8 @@
             "transcoding": "překódování",
             "discord": "discord",
             "playerFilters": "filtry přehrávače",
-            "logger": "protokol"
+            "logger": "protokol",
+            "lyricsDisplay": "zobrazení textů"
         },
         "albumArtistList": {
             "title": "$t(entity.albumArtist_other)"
@@ -844,7 +883,9 @@
             "topSongsFrom": "nejlepší skladby od umělce {{title}}",
             "relatedArtists": "podobní $t(entity.artist_other)",
             "viewAllTracks": "zobrazit všechny $t(entity.track_other)",
-            "viewAll": "zobrazit vše"
+            "viewAll": "zobrazit vše",
+            "groupingTypeAll": "všechny typy vydání",
+            "groupingTypePrimary": "primární typy vydání"
         },
         "itemDetail": {
             "copiedPath": "cesta úspěšně zkopírována",
@@ -899,7 +940,10 @@
             "ignoreCors": "ignorovat CORS $t(common.restartRequired)",
             "error_savePassword": "při ukládání hesla se vyskytla chyba",
             "input_preferInstantMix": "preferovat instantní mix",
-            "input_preferInstantMixDescription": "pro získání podobných skladeb použít pouze instantní mix. užitečné, pokud máte doplňky, které upravují toto chování"
+            "input_preferInstantMixDescription": "pro získání podobných skladeb použít pouze instantní mix. užitečné, pokud máte doplňky, které upravují toto chování",
+            "input_preferRemoteUrl": "preferovat veřejnou adresu url",
+            "input_remoteUrl": "veřejná adresa url",
+            "input_remoteUrlPlaceholder": "volitelné: veřejná adresa url pro externí funkce"
         },
         "addToPlaylist": {
             "success": "přidáno $t(entity.trackWithCount, {\"count\": {{message}} }) do $t(entity.playlistWithCount, {\"count\": {{numOfPlaylists}} })",
@@ -970,6 +1014,11 @@
             "input_homepageUrl": "adresa domovské stránky",
             "input_name": "název",
             "input_streamUrl": "adresa streamu"
+        },
+        "lyricsExport": {
+            "export": "exportovat texty",
+            "input_synced": "exportovat synchronizované texty",
+            "input_offset": "$t(setting.lyricOffset)"
         }
     },
     "entity": {
@@ -1000,9 +1049,9 @@
         "albumWithCount_one": "{{count}} album",
         "albumWithCount_few": "{{count}} alba",
         "albumWithCount_other": "{{count}} alb",
-        "favorite_one": "oblíbená",
+        "favorite_one": "oblíbený",
         "favorite_few": "oblíbené",
-        "favorite_other": "oblíbených",
+        "favorite_other": "oblíbené",
         "artistWithCount_one": "{{count}} umělec",
         "artistWithCount_few": "{{count}} umělci",
         "artistWithCount_other": "{{count}} umělců",
@@ -1084,5 +1133,160 @@
         "notInPlaylist": "není v",
         "notInTheLast": "není v posledním",
         "startsWith": "začíná na"
+    },
+    "datetime": {
+        "minuteShort": "min.",
+        "secondShort": "s",
+        "hourShort": "h.",
+        "dayShort": "d."
+    },
+    "visualizer": {
+        "visualizerType": "Typ vizualizéru",
+        "cyclePresets": "Cyklicky procházet předvolby",
+        "cycleTime": "Čas cyklování (sekundy)",
+        "includeAllPresets": "Zahrnout všechny předvolby",
+        "ignoredPresets": "Ignorované předvolby",
+        "selectedPresets": "Vybrané předvolby",
+        "randomizeNextPreset": "Náhodně vybrat další předvolbu",
+        "blendTime": "Čas prolnutí",
+        "presets": "Předvolby",
+        "selectPreset": "Vybrat předvolbu",
+        "applyPreset": "Použít předvolbu",
+        "saveAsPreset": "Uložit jako předvolbu",
+        "updatePreset": "Aktualizovat předvolbu",
+        "copyConfiguration": "Kopírovat konfiguraci",
+        "pasteConfiguration": "Vložit konfiguraci",
+        "pasteConfigurationPlaceholder": "Sem vložte konfiguraci JSON…",
+        "pasteFromClipboard": "Vložit ze schránky",
+        "applyConfiguration": "Použít konfiguraci",
+        "configCopied": "Konfigurace zkopírována do schránky",
+        "configCopyFailed": "Nepodařilo se zkopírovat konfiguraci",
+        "configPasted": "Konfigurace úspěšně použita",
+        "configPasteFailed": "Nepodařilo se použít konfiguraci. Zkontrolujte prosím formát.",
+        "configPasteReadFailed": "Nepodařilo se přečíst schránku",
+        "presetName": "Název předvolby",
+        "presetNamePlaceholder": "Zadejte název předvolby",
+        "general": "Obecné",
+        "mode": "Režim",
+        "mode1To8": "Režim 1–8",
+        "mode10": "Režim 10",
+        "barSpace": "Mezera mezi sloupci",
+        "lineWidth": "Šířka linky",
+        "fillAlpha": "Vyplnit alfu",
+        "channelLayout": "Rozložení kanálů",
+        "maxFPS": "Max. počet snímků za sekundu",
+        "opacity": "Neprůhlednost",
+        "customGradients": "Vlastní přechody",
+        "addCustomGradient": "Přidat vlastní přechod",
+        "gradientName": "Název přechodu",
+        "gradientNamePlaceholder": "Název přechodu",
+        "vertical": "Vertikální",
+        "horizontal": "Horizontální",
+        "colorStops": "Ukončení barev",
+        "addColor": "Přidat barvu",
+        "position": "Pozice",
+        "level": "Úroveň",
+        "remove": "Odstranit",
+        "custom": "Vlastní",
+        "builtIn": "Vestavěné",
+        "colors": "Barvy",
+        "colorMode": "Režim barev",
+        "gradient": "Přechod",
+        "gradientLeft": "Přechod zleva",
+        "gradientRight": "Přechod zprava",
+        "fft": "FFT",
+        "fftSize": "Velikost FFT",
+        "smoothing": "Vyhlazování",
+        "frequencyRangeAndScaling": "Rozsah a škálování frekvencí",
+        "minimumFrequency": "Minimální frekvence",
+        "maximumFrequency": "Maximální frekvence",
+        "frequencyScale": "Škála frekvence",
+        "sensitivity": "Citlivost",
+        "weightingFilter": "Filtr váhy",
+        "minimumDecibels": "Minimální decibely",
+        "maximumDecibels": "Maximální decibely",
+        "linearAmplitude": "Lineární amplituda",
+        "linearBoost": "Lineární zesílení",
+        "peakBehavior": "Chování ve špičce",
+        "showPeaks": "Zobrazit špičky",
+        "fadePeaks": "Prolnout špičky",
+        "peakLine": "Linka špiček",
+        "gravity": "Gravitace",
+        "peakFadeTime": "Čas pádu ze špičky (ms)",
+        "peakHoldTime": "Čas udržení na špičce (ms)",
+        "radialSpectrum": "Kruhové spektrum",
+        "radial": "Kruhové",
+        "radialInvert": "Kruhové invertované",
+        "spinSpeed": "Rychlost rotace",
+        "radius": "Poloměr",
+        "reflexMirror": "Reflexní zrcadlení",
+        "reflexFit": "Reflexní vyplnění",
+        "reflexRatio": "Reflexní poměr",
+        "reflexAlpha": "Reflexní alfa",
+        "reflexBrightness": "Reflexní jas",
+        "mirror": "Zrcadlení",
+        "miscellaneousSettings": "Různá nastavení",
+        "alphaBars": "Alfa sloupce",
+        "ansiBands": "ANSI sloupce",
+        "ledBars": "LED sloupce",
+        "trueLeds": "Pravé LED",
+        "lumiBars": "Lumi sloupce",
+        "outlineBars": "Obrysové sloupce",
+        "roundBars": "Zaoblené sloupce",
+        "lowResolution": "Nízké rozlišení",
+        "splitGradient": "Přechod rozdělení",
+        "showFPS": "Zobrazit FPS",
+        "showScaleX": "Zobrazit osu X",
+        "noteLabels": "Štítky not",
+        "showScaleY": "Zobrazit osu Y",
+        "options": {
+            "colorMode": {
+                "gradient": "Přechod",
+                "barIndex": "Index sloupce",
+                "barLevel": "Úroveň sloupce"
+            },
+            "gradient": {
+                "classic": "Klasický",
+                "prism": "Prism",
+                "rainbow": "Duha",
+                "steelblue": "Ocelově modrá",
+                "orangered": "Oranžová"
+            },
+            "channelLayout": {
+                "single": "Jeden",
+                "dualCombined": "Duální kombinované",
+                "dualHorizontal": "Duální horizontální",
+                "dualVertical": "Duální vertikální"
+            },
+            "frequencyScale": {
+                "bark": "Barkova stupnice",
+                "linear": "Lineární stupnice",
+                "log": "Logaritmická stupnice",
+                "mel": "Melová stupnice",
+                "none": "Žádný"
+            },
+            "weightingFilter": {
+                "none": "Žádný",
+                "a": "A",
+                "b": "B",
+                "c": "C",
+                "d": "D",
+                "z": "Z"
+            },
+            "mode": {
+                "0": "[0] Diskrétní frekvence",
+                "1": "[1] 1/24 oktávy / 240 pásem",
+                "2": "[2] 1/12 oktávy / 120 pásem",
+                "3": "[3] 1/8 oktávy / 80 pásem",
+                "4": "[4] 1/6 oktávy / 60 pásem",
+                "5": "[5] 1/4 oktávy / 40 pásem",
+                "6": "[6] 1/3 oktávy / 30 pásem",
+                "7": "[7] Polovina oktávy / 20 pásem",
+                "8": "[8] Celá oktáva / 10 pásem",
+                "10": "[10] Linka / Graf oblasti"
+            }
+        },
+        "pasteGradient": "Vložit přechod",
+        "pasteGradientPlaceholder": "Sem vložte JSON přechodu…"
     }
 }

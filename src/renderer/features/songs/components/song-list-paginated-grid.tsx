@@ -22,15 +22,16 @@ export const SongListPaginatedGrid = ({
         sortOrder: SortOrder.ASC,
     },
     serverId,
+    size,
 }: SongListPaginatedGridProps) => {
+    const { currentPage, onChange } = useItemListPagination();
+
     const listCountQuery = songsQueries.listCount({
-        query: { ...query },
+        query: { ...query, limit: itemsPerPage },
         serverId: serverId,
     }) as UseSuspenseQueryOptions<number, Error, number, readonly unknown[]>;
 
     const listQueryFn = api.controller.getSongList;
-
-    const { currentPage, onChange } = useItemListPagination();
 
     const { data, pageCount, totalItemCount } = useItemListPaginatedLoader({
         currentPage,
@@ -43,7 +44,7 @@ export const SongListPaginatedGrid = ({
         serverId,
     });
 
-    const rows = useGridRows(LibraryItem.SONG, ItemListKey.SONG);
+    const rows = useGridRows(LibraryItem.SONG, ItemListKey.SONG, size);
 
     return (
         <ItemListWithPagination
@@ -60,6 +61,7 @@ export const SongListPaginatedGrid = ({
                 itemsPerRow={itemsPerRow}
                 itemType={LibraryItem.SONG}
                 rows={rows}
+                size={size}
             />
         </ItemListWithPagination>
     );

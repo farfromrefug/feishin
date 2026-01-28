@@ -2,17 +2,23 @@ import type { IpcRendererEvent } from 'electron';
 
 import { t } from 'i18next';
 import isElectron from 'is-electron';
-import { useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import i18n, { languages } from '/@/i18n/i18n';
-import { ArtistSettings } from '/@/renderer/features/settings/components/general/artist-settings';
+import { ImageResolutionSettings } from '/@/renderer/features/settings/components/general/art-resolution-settings';
+import {
+    ArtistReleaseTypeSettings,
+    ArtistSettings,
+} from '/@/renderer/features/settings/components/general/artist-settings';
 import { HomeSettings } from '/@/renderer/features/settings/components/general/home-settings';
+import { PathSettings } from '/@/renderer/features/settings/components/general/path-settings';
 import {
     SettingOption,
     SettingsSection,
 } from '/@/renderer/features/settings/components/settings-section';
 import {
+    HomeFeatureStyle,
     SideQueueType,
     useFontSettings,
     useGeneralSettings,
@@ -21,6 +27,7 @@ import {
 import { type Font, FONT_OPTIONS } from '/@/renderer/types/fonts';
 import { FileInput } from '/@/shared/components/file-input/file-input';
 import { NumberInput } from '/@/shared/components/number-input/number-input';
+import { SegmentedControl } from '/@/shared/components/segmented-control/segmented-control';
 import { Select } from '/@/shared/components/select/select';
 import { Slider } from '/@/shared/components/slider/slider';
 import { Switch } from '/@/shared/components/switch/switch';
@@ -31,6 +38,23 @@ const localSettings = isElectron() ? window.api.localSettings : null;
 const ipc = isElectron() ? window.api.ipc : null;
 // Electron 32+ removed file.path, use this which is exposed in preload to get real path
 const webUtils = isElectron() ? window.electron.webUtils : null;
+
+const HOME_FEATURE_STYLE_OPTIONS = [
+    {
+        label: t('setting.homeFeatureStyle', {
+            context: 'optionSingle',
+            postProcess: 'sentenceCase',
+        }),
+        value: HomeFeatureStyle.SINGLE,
+    },
+    {
+        label: t('setting.homeFeatureStyle', {
+            context: 'optionMultiple',
+            postProcess: 'sentenceCase',
+        }),
+        value: HomeFeatureStyle.MULTIPLE,
+    },
+];
 
 const SIDE_QUEUE_OPTIONS = [
     {
@@ -73,7 +97,7 @@ if (isElectron()) {
     });
 }
 
-export const ApplicationSettings = () => {
+export const ApplicationSettings = memo(() => {
     const { t } = useTranslation();
     const settings = useGeneralSettings();
     const fontSettings = useFontSettings();
@@ -353,6 +377,29 @@ export const ApplicationSettings = () => {
         },
         {
             control: (
+                <SegmentedControl
+                    aria-label={t('setting.homeFeatureStyle', { postProcess: 'sentenceCase' })}
+                    data={HOME_FEATURE_STYLE_OPTIONS}
+                    defaultValue={settings.homeFeatureStyle}
+                    onChange={(e) =>
+                        setSettings({
+                            general: {
+                                ...settings,
+                                homeFeatureStyle: e as HomeFeatureStyle,
+                            },
+                        })
+                    }
+                />
+            ),
+            description: t('setting.homeFeature', {
+                context: 'description',
+                postProcess: 'sentenceCase',
+            }),
+            isHidden: false,
+            title: t('setting.homeFeature', { postProcess: 'sentenceCase' }),
+        },
+        {
+            control: (
                 <Switch
                     aria-label={t('setting.albumBackground', { postProcess: 'sentenceCase' })}
                     defaultChecked={settings.albumBackground}
@@ -556,6 +603,27 @@ export const ApplicationSettings = () => {
         {
             control: (
                 <Switch
+                    defaultChecked={settings.showRatings}
+                    onChange={(e) => {
+                        setSettings({
+                            general: {
+                                ...settings,
+                                showRatings: e.currentTarget.checked,
+                            },
+                        });
+                    }}
+                />
+            ),
+            description: t('setting.showRatings', {
+                context: 'description',
+                postProcess: 'sentenceCase',
+            }),
+            isHidden: false,
+            title: t('setting.showRatings', { postProcess: 'sentenceCase' }),
+        },
+        {
+            control: (
+                <Switch
                     aria-label={t('setting.playerbarOpenDrawer', { postProcess: 'sentenceCase' })}
                     defaultChecked={settings.playerbarOpenDrawer}
                     onChange={(e) =>
@@ -575,43 +643,21 @@ export const ApplicationSettings = () => {
             isHidden: false,
             title: t('setting.playerbarOpenDrawer', { postProcess: 'sentenceCase' }),
         },
-        {
-            control: (
-                <NumberInput
-                    defaultValue={settings.albumArtRes || undefined}
-                    hideControls={false}
-                    max={2500}
-                    onBlur={(e) => {
-                        const newVal =
-                            e.currentTarget.value !== '0'
-                                ? Math.min(Math.max(Number(e.currentTarget.value), 175), 2500)
-                                : null;
-                        setSettings({ general: { ...settings, albumArtRes: newVal } });
-                    }}
-                    placeholder="0"
-                    value={settings.albumArtRes ?? 0}
-                    width={75}
-                />
-            ),
-            description: t('setting.playerAlbumArtResolution', {
-                context: 'description',
-                postProcess: 'sentenceCase',
-            }),
-            isHidden: false,
-            title: t('setting.playerAlbumArtResolution', { postProcess: 'sentenceCase' }),
-        },
     ];
 
     return (
         <SettingsSection
             extra={
                 <>
+                    <ImageResolutionSettings />
                     <HomeSettings />
                     <ArtistSettings />
+                    <ArtistReleaseTypeSettings />
+                    <PathSettings />
                 </>
             }
             options={options}
             title={t('page.setting.application', { postProcess: 'sentenceCase' })}
         />
     );
-};
+});

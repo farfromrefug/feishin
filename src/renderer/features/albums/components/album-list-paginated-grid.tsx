@@ -29,15 +29,16 @@ export const AlbumListPaginatedGrid = ({
     },
     saveScrollOffset = true,
     serverId,
+    size,
 }: AlbumListPaginatedGridProps) => {
+    const { currentPage, onChange } = useItemListPagination();
+
     const listCountQuery = albumQueries.listCount({
-        query: { ...query },
+        query: { ...query, limit: itemsPerPage },
         serverId: serverId,
     }) as UseSuspenseQueryOptions<number, Error, number, readonly unknown[]>;
 
     const listQueryFn = api.controller.getAlbumList;
-
-    const { currentPage, onChange } = useItemListPagination();
 
     const { data, pageCount, totalItemCount } = useItemListPaginatedLoader({
         currentPage,
@@ -54,7 +55,7 @@ export const AlbumListPaginatedGrid = ({
         enabled: saveScrollOffset,
     });
 
-    const rows = useGridRows(LibraryItem.ALBUM, ItemListKey.ALBUM);
+    const rows = useGridRows(LibraryItem.ALBUM, ItemListKey.ALBUM, size);
 
     return (
         <ItemListWithPagination
@@ -77,6 +78,7 @@ export const AlbumListPaginatedGrid = ({
                 itemType={LibraryItem.ALBUM}
                 onScrollEnd={handleOnScrollEnd}
                 rows={rows}
+                size={size}
             />
         </ItemListWithPagination>
     );

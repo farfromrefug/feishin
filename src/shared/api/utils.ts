@@ -180,7 +180,11 @@ export const sortSongList = (songs: Song[], sortBy: SongListSort, sortOrder: Sor
             break;
 
         case SongListSort.COMMENT:
-            results = orderBy(results, ['comment'], [order]);
+            results = orderBy(
+                results,
+                ['comment', 'discNumber', 'trackNumber'],
+                [order, order, 'asc', 'asc'],
+            );
             break;
 
         case SongListSort.DURATION:
@@ -414,6 +418,25 @@ export const sortAlbumList = (albums: Album[], sortBy: AlbumListSort, sortOrder:
         case AlbumListSort.RECENTLY_PLAYED:
             results = orderBy(results, ['lastPlayedAt'], [order]);
             break;
+        case AlbumListSort.RELEASE_DATE:
+            results = orderBy(
+                results,
+                [
+                    (v) => {
+                        if (v.originalDate) {
+                            return new Date(v.originalDate).getTime();
+                        }
+
+                        // Fallback to the first day of the release year
+                        if (v.originalYear) {
+                            return new Date(v.originalYear, 0, 1).getTime();
+                        }
+                        return 0;
+                    },
+                ],
+                [order],
+            );
+            break;
         case AlbumListSort.SONG_COUNT:
             results = orderBy(results, ['songCount'], [order]);
             break;
@@ -451,4 +474,12 @@ export const sortRadioList = (
     }
 
     return results;
+};
+
+export const replacePathPrefix = (path: string, replacePrefix?: string, addPrefix?: string) => {
+    if (replacePrefix && path.startsWith(replacePrefix)) {
+        return path.slice(replacePrefix.length);
+    }
+
+    return addPrefix ? addPrefix + path : path;
 };

@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
@@ -21,7 +22,7 @@ import { Text } from '/@/shared/components/text/text';
 import { Tooltip } from '/@/shared/components/tooltip/tooltip';
 import { Play } from '/@/shared/types/types';
 
-export const ControlSettings = () => {
+export const ControlSettings = memo(() => {
     const { t } = useTranslation();
     const settings = useGeneralSettings();
     const playerbarSlider = usePlayerbarSlider();
@@ -206,6 +207,34 @@ export const ControlSettings = () => {
             }),
             isHidden: false,
             title: t('setting.followCurrentSong', { postProcess: 'sentenceCase' }),
+        },
+        {
+            control: (
+                <NumberInput
+                    defaultValue={settings.artistRadioCount}
+                    max={200}
+                    min={10}
+                    onBlur={(e) => {
+                        if (!e) return;
+                        const newVal = e.currentTarget.value
+                            ? Math.min(Math.max(Number(e.currentTarget.value), 10), 100)
+                            : settings.artistRadioCount;
+                        setSettings({
+                            general: {
+                                ...settings,
+                                artistRadioCount: newVal,
+                            },
+                        });
+                    }}
+                    width={75}
+                />
+            ),
+            description: t('setting.artistRadioCount', {
+                context: 'description',
+                postProcess: 'sentenceCase',
+            }),
+            isHidden: false,
+            title: t('setting.artistRadioCount', { postProcess: 'sentenceCase' }),
         },
         {
             control: (
@@ -458,4 +487,4 @@ export const ControlSettings = () => {
             title={t('page.setting.controls', { postProcess: 'sentenceCase' })}
         />
     );
-};
+});

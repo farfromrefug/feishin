@@ -3,11 +3,16 @@ import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import { createWithEqualityFn } from 'zustand/traditional';
 
+import { AlbumListSort, SortOrder } from '/@/shared/types/domain-types';
 import { Platform } from '/@/shared/types/types';
 
 export interface AppSlice extends AppState {
     actions: {
+        setAlbumArtistDetailGroupingType: (groupingType: 'all' | 'primary') => void;
+        setAlbumArtistDetailSort: (sortBy: AlbumListSort, sortOrder: SortOrder) => void;
         setAppStore: (data: Partial<AppSlice>) => void;
+        setArtistSelectMode: (mode: 'multi' | 'single') => void;
+        setGenreSelectMode: (mode: 'multi' | 'single') => void;
         setPageSidebar: (key: string, value: boolean) => void;
         setPrivateMode: (enabled: boolean) => void;
         setShowTimeRemaining: (enabled: boolean) => void;
@@ -17,7 +22,14 @@ export interface AppSlice extends AppState {
 }
 
 export interface AppState {
+    albumArtistDetailSort: {
+        groupingType: 'all' | 'primary';
+        sortBy: AlbumListSort;
+        sortOrder: SortOrder;
+    };
+    artistSelectMode: 'multi' | 'single';
     commandPalette: CommandPaletteProps;
+    genreSelectMode: 'multi' | 'single';
     isReorderingQueue: boolean;
     pageSidebar: Record<string, boolean>;
     platform: Platform;
@@ -53,16 +65,36 @@ export const useAppStore = createWithEqualityFn<AppSlice>()(
         devtools(
             immer((set, get) => ({
                 actions: {
+                    setAlbumArtistDetailGroupingType: (groupingType) => {
+                        set((state) => {
+                            state.albumArtistDetailSort.groupingType = groupingType;
+                        });
+                    },
+                    setAlbumArtistDetailSort: (sortBy, sortOrder) => {
+                        set((state) => {
+                            state.albumArtistDetailSort = {
+                                ...state.albumArtistDetailSort,
+                                sortBy,
+                                sortOrder,
+                            };
+                        });
+                    },
                     setAppStore: (data) => {
                         set({ ...get(), ...data });
                     },
+                    setArtistSelectMode: (mode) => {
+                        set((state) => {
+                            state.artistSelectMode = mode;
+                        });
+                    },
+                    setGenreSelectMode: (mode) => {
+                        set((state) => {
+                            state.genreSelectMode = mode;
+                        });
+                    },
                     setPageSidebar: (key, value) => {
                         set((state) => {
-                            if (value) {
-                                state.pageSidebar[key] = value;
-                            } else {
-                                delete state.pageSidebar[key];
-                            }
+                            state.pageSidebar[key] = value;
                         });
                     },
                     setPrivateMode: (privateMode) => {
@@ -86,6 +118,12 @@ export const useAppStore = createWithEqualityFn<AppSlice>()(
                         });
                     },
                 },
+                albumArtistDetailSort: {
+                    groupingType: 'primary',
+                    sortBy: AlbumListSort.RELEASE_DATE,
+                    sortOrder: SortOrder.DESC,
+                },
+                artistSelectMode: 'multi',
                 commandPalette: {
                     close: () => {
                         set((state) => {
@@ -104,8 +142,12 @@ export const useAppStore = createWithEqualityFn<AppSlice>()(
                         });
                     },
                 },
+                genreSelectMode: 'multi',
                 isReorderingQueue: false,
-                pageSidebar: {},
+                pageSidebar: {
+                    album: true,
+                    song: true,
+                },
                 platform: Platform.WINDOWS,
                 privateMode: false,
                 showTimeRemaining: false,

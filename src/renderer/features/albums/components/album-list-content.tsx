@@ -39,7 +39,7 @@ const AlbumListFilters = () => {
     return (
         <ListWithSidebarContainer.SidebarPortal>
             <Stack h="100%">
-                <ListFiltersTitle />
+                <ListFiltersTitle itemType={LibraryItem.ALBUM} />
                 <ScrollArea>
                     <ListFilters itemType={LibraryItem.ALBUM} />
                 </ScrollArea>
@@ -115,6 +115,7 @@ export const AlbumListView = ({
                             itemsPerRow={grid.itemsPerRowEnabled ? grid.itemsPerRow : undefined}
                             query={mergedQuery}
                             serverId={server.id}
+                            size={grid.size}
                         />
                     );
                 }
@@ -126,6 +127,7 @@ export const AlbumListView = ({
                             itemsPerRow={grid.itemsPerRowEnabled ? grid.itemsPerRow : undefined}
                             query={mergedQuery}
                             serverId={server.id}
+                            size={grid.size}
                         />
                     );
                 }

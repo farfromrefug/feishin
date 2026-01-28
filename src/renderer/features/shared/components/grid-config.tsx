@@ -11,7 +11,7 @@ import {
 import { disableNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/disable-native-drag-preview';
 import clsx from 'clsx';
 import Fuse, { FuseResultMatch } from 'fuse.js';
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import styles from './table-config.module.css';
@@ -24,7 +24,6 @@ import {
     useSettingsStore,
     useSettingsStoreActions,
 } from '/@/renderer/store';
-import { Accordion } from '/@/shared/components/accordion/accordion';
 import { ActionIcon, ActionIconGroup } from '/@/shared/components/action-icon/action-icon';
 import { Badge } from '/@/shared/components/badge/badge';
 import { Checkbox } from '/@/shared/components/checkbox/checkbox';
@@ -223,6 +222,43 @@ export const GridConfig = ({
                     </Group>
                 ),
             },
+            {
+                component: (
+                    <SegmentedControl
+                        data={[
+                            {
+                                label: t('table.config.general.size_compact', {
+                                    postProcess: 'titleCase',
+                                }),
+                                value: 'compact',
+                            },
+                            {
+                                label: t('table.config.general.size_default', {
+                                    postProcess: 'titleCase',
+                                }),
+                                value: 'default',
+                            },
+                            {
+                                label: t('table.config.general.size_large', {
+                                    postProcess: 'titleCase',
+                                }),
+                                value: 'large',
+                            },
+                        ]}
+                        onChange={(value) =>
+                            setList(listKey, {
+                                grid: { size: value as 'compact' | 'default' | 'large' },
+                            })
+                        }
+                        size="sm"
+                        value={grid.size || 'default'}
+                        w="100%"
+                    />
+                ),
+                id: 'size',
+                label: t('table.config.general.size', { postProcess: 'sentenceCase' }),
+                size: 'sm',
+            },
 
             ...(extraOptions || []),
         ];
@@ -247,30 +283,11 @@ export const GridConfig = ({
 
     return (
         <>
-            <Accordion
-                styles={{
-                    control: { padding: '0' },
-                    item: { border: 'none' },
-                }}
-            >
-                <Accordion.Item value="grid">
-                    <Accordion.Control>
-                        <Text size="sm">
-                            {t('table.config.general.advancedSettings', {
-                                postProcess: 'sentenceCase',
-                            })}
-                        </Text>
-                    </Accordion.Control>
-                    <Accordion.Panel>
-                        <ListConfigTable options={options} />
-                    </Accordion.Panel>
-                </Accordion.Item>
-            </Accordion>
+            <ListConfigTable options={options} />
             <Divider />
             <GridRowConfig
                 data={gridRowsData}
-                listKey={listKey}
-                onChange={(rows) => setList(listKey, { ...list, grid: { ...grid, rows } })}
+                onChange={(rows) => setList(listKey, { grid: { rows } })}
                 value={grid.rows}
             />
         </>
@@ -279,16 +296,22 @@ export const GridConfig = ({
 
 const GridRowConfig = ({
     data,
-    listKey,
     onChange,
     value,
 }: {
     data: { label: string; value: string }[];
-    listKey: ItemListKey;
     onChange: (value: ItemGridListRowConfig[]) => void;
     value: ItemGridListRowConfig[];
 }) => {
     const { t } = useTranslation();
+
+    const valueRef = useRef(value);
+    const onChangeRef = useRef(onChange);
+
+    useLayoutEffect(() => {
+        valueRef.current = value;
+        onChangeRef.current = onChange;
+    });
 
     const labelMap = useMemo(() => {
         return data.reduce(
@@ -300,79 +323,55 @@ const GridRowConfig = ({
         );
     }, [data]);
 
-    const handleChangeEnabled = useCallback(
-        (item: ItemGridListRowConfig, checked: boolean) => {
-            const value = useSettingsStore.getState().lists[listKey]?.grid.rows;
-            if (!value) return;
-            const index = value.findIndex((v) => v.id === item.id);
-            const newValues = [...value];
-            newValues[index] = { ...newValues[index], isEnabled: checked };
-            onChange(newValues);
-        },
-        [listKey, onChange],
-    );
+    const handleChangeEnabled = useCallback((item: ItemGridListRowConfig, checked: boolean) => {
+        const currentValue = valueRef.current;
+        const index = currentValue.findIndex((v) => v.id === item.id);
+        const newValues = [...currentValue];
+        newValues[index] = { ...newValues[index], isEnabled: checked };
+        onChangeRef.current(newValues);
+    }, []);
 
-    const handleMoveUp = useCallback(
-        (item: ItemGridListRowConfig) => {
-            const value = useSettingsStore.getState().lists[listKey]?.grid.rows;
-            if (!value) return;
-            const index = value.findIndex((v) => v.id === item.id);
-            if (index === 0) return;
-            const newValues = [...value];
-            [newValues[index], newValues[index - 1]] = [newValues[index - 1], newValues[index]];
-            onChange(newValues);
-        },
-        [listKey, onChange],
-    );
+    const handleMoveUp = useCallback((item: ItemGridListRowConfig) => {
+        const currentValue = valueRef.current;
+        const index = currentValue.findIndex((v) => v.id === item.id);
+        if (index === 0) return;
+        const newValues = [...currentValue];
+        [newValues[index], newValues[index - 1]] = [newValues[index - 1], newValues[index]];
+        onChangeRef.current(newValues);
+    }, []);
 
-    const handleMoveDown = useCallback(
-        (item: ItemGridListRowConfig) => {
-            const value = useSettingsStore.getState().lists[listKey]?.grid.rows;
-            if (!value) return;
-            const index = value.findIndex((v) => v.id === item.id);
-            if (index === value.length - 1) return;
-            const newValues = [...value];
-            [newValues[index], newValues[index + 1]] = [newValues[index + 1], newValues[index]];
-            onChange(newValues);
-        },
-        [listKey, onChange],
-    );
+    const handleMoveDown = useCallback((item: ItemGridListRowConfig) => {
+        const currentValue = valueRef.current;
+        const index = currentValue.findIndex((v) => v.id === item.id);
+        if (index === currentValue.length - 1) return;
+        const newValues = [...currentValue];
+        [newValues[index], newValues[index + 1]] = [newValues[index + 1], newValues[index]];
+        onChangeRef.current(newValues);
+    }, []);
 
-    const handleAlignLeft = useCallback(
-        (item: ItemGridListRowConfig) => {
-            const value = useSettingsStore.getState().lists[listKey]?.grid.rows;
-            if (!value) return;
-            const index = value.findIndex((v) => v.id === item.id);
-            const newValues = [...value];
-            newValues[index] = { ...newValues[index], align: 'start' };
-            onChange(newValues);
-        },
-        [listKey, onChange],
-    );
+    const handleAlignLeft = useCallback((item: ItemGridListRowConfig) => {
+        const currentValue = valueRef.current;
+        const index = currentValue.findIndex((v) => v.id === item.id);
+        const newValues = [...currentValue];
+        newValues[index] = { ...newValues[index], align: 'start' };
+        onChangeRef.current(newValues);
+    }, []);
 
-    const handleAlignCenter = useCallback(
-        (item: ItemGridListRowConfig) => {
-            const value = useSettingsStore.getState().lists[listKey]?.grid.rows;
-            if (!value) return;
-            const index = value.findIndex((v) => v.id === item.id);
-            const newValues = [...value];
-            newValues[index] = { ...newValues[index], align: 'center' };
-            onChange(newValues);
-        },
-        [listKey, onChange],
-    );
+    const handleAlignCenter = useCallback((item: ItemGridListRowConfig) => {
+        const currentValue = valueRef.current;
+        const index = currentValue.findIndex((v) => v.id === item.id);
+        const newValues = [...currentValue];
+        newValues[index] = { ...newValues[index], align: 'center' };
+        onChangeRef.current(newValues);
+    }, []);
 
-    const handleAlignRight = useCallback(
-        (item: ItemGridListRowConfig) => {
-            const value = useSettingsStore.getState().lists[listKey]?.grid.rows;
-            if (!value) return;
-            const index = value.findIndex((v) => v.id === item.id);
-            const newValues = [...value];
-            newValues[index] = { ...newValues[index], align: 'end' };
-            onChange(newValues);
-        },
-        [listKey, onChange],
-    );
+    const handleAlignRight = useCallback((item: ItemGridListRowConfig) => {
+        const currentValue = valueRef.current;
+        const index = currentValue.findIndex((v) => v.id === item.id);
+        const newValues = [...currentValue];
+        newValues[index] = { ...newValues[index], align: 'end' };
+        onChangeRef.current(newValues);
+    }, []);
 
     const [searchRows, setSearchRows] = useDebouncedState('', 300);
 
@@ -402,25 +401,20 @@ const GridRowConfig = ({
         }));
     }, [value, searchRows, fuse]);
 
-    const handleReorder = useCallback(
-        (idFrom: string, idTo: string, edge: Edge | null) => {
-            const currentValue = useSettingsStore.getState().lists[listKey]?.grid.rows;
-            if (!currentValue) return;
+    const handleReorder = useCallback((idFrom: string, idTo: string, edge: Edge | null) => {
+        const currentValue = valueRef.current;
+        const idList = currentValue.map((item) => item.id);
+        const newIdOrder = dndUtils.reorderById({
+            edge,
+            idFrom,
+            idTo,
+            list: idList,
+        });
 
-            const idList = currentValue.map((item) => item.id);
-            const newIdOrder = dndUtils.reorderById({
-                edge,
-                idFrom,
-                idTo,
-                list: idList,
-            });
-
-            // Map the new ID order back to full items
-            const newOrder = newIdOrder.map((id) => currentValue.find((item) => item.id === id)!);
-            onChange(newOrder);
-        },
-        [listKey, onChange],
-    );
+        // Map the new ID order back to full items
+        const newOrder = newIdOrder.map((id) => currentValue.find((item) => item.id === id)!);
+        onChangeRef.current(newOrder);
+    }, []);
 
     return (
         <Stack gap="xs">
